@@ -1,0 +1,3223 @@
+<!DOCTYPE html>
+<html lang="ms" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>JawiPro — Belajar Jawi, Mudah dan Menyeronokkan!</title>
+
+  <!-- Google Fonts: Fredoka & Nunito untuk BM mesra kanak-kanak, Amiri & Noto Naskh Arabic untuk Jawi RTL -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Fredoka:wght@500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+            display: ['Fredoka', 'sans-serif'],
+            jawi: ['Noto Naskh Arabic', 'Amiri', 'serif'],
+          },
+          colors: {
+            brand: {
+              green: '#10B981',
+              greenDark: '#059669',
+              greenLight: '#D1FAE5',
+              yellow: '#FBBF24',
+              yellowDark: '#D97706',
+              yellowLight: '#FEF3C7',
+              blue: '#38BDF8',
+              blueDark: '#0284C7',
+              blueLight: '#E0F2FE',
+              cream: '#F8FAFC',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Firebase Compat SDKs (Realtime Database + Auth) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --accent: #FBBF24;
+      --secondary: #38BDF8;
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #ECFDF5 0%, #F0F9FF 50%, #FFFBEB 100%);
+      color: #1E293B;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .jawi-text {
+      font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+      direction: rtl;
+      unicode-bidi: isolate;
+      line-height: 1.75;
+    }
+
+    /* Butang 3D Mesra Kanak-Kanak */
+    .btn-3d {
+      transition: all 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.16);
+      position: relative;
+      top: 0;
+    }
+    .btn-3d:active:not(:disabled) {
+      top: 4px;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.16);
+    }
+    .btn-green {
+      background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+      box-shadow: 0 5px 0 #047857;
+      color: white;
+    }
+    .btn-green:active:not(:disabled) { box-shadow: 0 1px 0 #047857; }
+
+    .btn-yellow {
+      background: linear-gradient(180deg, #FCD34D 0%, #F59E0B 100%);
+      box-shadow: 0 5px 0 #B45309;
+      color: #451A03;
+    }
+    .btn-yellow:active:not(:disabled) { box-shadow: 0 1px 0 #B45309; }
+
+    .btn-blue {
+      background: linear-gradient(180deg, #7DD3FC 0%, #0EA5E9 100%);
+      box-shadow: 0 5px 0 #0369A1;
+      color: white;
+    }
+    .btn-blue:active:not(:disabled) { box-shadow: 0 1px 0 #0369A1; }
+
+    .btn-white {
+      background: #FFFFFF;
+      border: 2px solid #E2E8F0;
+      box-shadow: 0 4px 0 #CBD5E1;
+      color: #1E293B;
+    }
+    .btn-white:active:not(:disabled) { box-shadow: 0 1px 0 #CBD5E1; }
+
+    /* Animasi Maskot & Kad */
+    @keyframes floatBot {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-9px) rotate(2deg); }
+    }
+    .animate-bot {
+      animation: floatBot 3.2s ease-in-out infinite;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop {
+      animation: popIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+      50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.2s infinite;
+    }
+
+    @keyframes strokeDraw {
+      0% { transform: scale(0.75); opacity: 0.3; }
+      50% { transform: scale(1.12); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-letter {
+      animation: strokeDraw 0.6s ease-out;
+    }
+
+    /* Kad Memori Flip */
+    .memory-card {
+      perspective: 800px;
+    }
+    .memory-inner {
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-style: preserve-3d;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .memory-card.flipped .memory-inner {
+      transform: rotateY(180deg);
+    }
+    .memory-front, .memory-back {
+      backface-visibility: hidden;
+      position: absolute;
+      inset: 0;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .memory-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Kanvas Menulis */
+    #writingCanvas {
+      touch-action: none;
+      cursor: crosshair;
+      background-color: #FFFFFF;
+      border-radius: 1.25rem;
+    }
+
+    /* Scrollbar Kemas */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb { background: #A7F3D0; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10B981; }
+  </style>
+</head>
+<body class="antialiased selection:bg-emerald-200 selection:text-emerald-900">
+
+  <!-- Kanvas Konfeti Perayaan -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+  <!-- Bekas Notifikasi Toast Mesra Kanak-Kanak -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
+
+  <!-- Bar Navigasi Atas Global (Dipaparkan selepas Splash/Onboarding) -->
+  <header id="topNavbar" class="hidden sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b-2 border-emerald-100 shadow-sm">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
+      <!-- Logo & Butang Utama -->
+      <button onclick="navigateTo('studentDashboard')" class="flex items-center gap-2.5 text-left group focus:outline-none">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition">
+          <span class="jawi-text text-2xl font-bold leading-none">ج</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-display text-lg sm:text-xl font-bold text-emerald-700 tracking-tight">JawiPro</span>
+            <span id="syncBadge" title="Status Segerak Data" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="syncText">Awan Aktif</span>
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 hidden sm:block">Belajar Jawi, Mudah dan Menyeronokkan!</p>
+        </div>
+      </button>
+
+      <!-- Statistik Pantas & Kawalan Audio / Peranan -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <div id="navStats" class="hidden md:flex items-center gap-2 bg-emerald-50/90 border border-emerald-200 px-3 py-1.5 rounded-2xl text-xs font-extrabold">
+          <span class="text-amber-600 flex items-center gap-1">⭐ <span id="navStars">0</span></span>
+          <span class="text-slate-300">|</span>
+          <span class="text-emerald-700 flex items-center gap-1">⚡ <span id="navXP">0</span> XP</span>
+          <span class="text-slate-300">|</span>
+          <span class="text-orange-600 flex items-center gap-1">🔥 <span id="navStreak">1</span> Hari</span>
+        </div>
+
+        <!-- Butang Kawalan Bunyi -->
+        <button id="soundToggleBtn" onclick="toggleAudioMute()" title="Togol Bunyi & Suara" class="p-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 transition active:scale-95">
+          <span id="soundIcon" class="text-base sm:text-lg">🔊</span>
+        </button>
+
+        <!-- Butang Tukar Peranan / Profil -->
+        <button onclick="navigateTo('roleSelect')" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition active:scale-95">
+          <span>🔄</span>
+          <span class="hidden sm:inline">Tukar Peranan</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PEMBUNGKUS UTAMA HALAMAN -->
+  <main id="appRoot" class="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-20">
+    <!-- Kandungan dinamik dijana oleh JavaScript -->
+  </main>
+
+  <!-- MODAL PIN PENJAGA (IBU BAPA / ADMIN) -->
+  <div id="pinModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-4 border-emerald-200 animate-pop text-center">
+      <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-3xl">🔒</div>
+      <h3 id="pinModalTitle" class="font-display text-2xl font-bold text-slate-800">Pengesahan Penjaga</h3>
+      <p id="pinModalDesc" class="text-sm text-slate-500 mt-1 mb-4">Masukkan PIN 4-digit untuk akses ruangan ini. (PIN lalai: <b>1234</b>)</p>
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+        class="w-40 mx-auto text-center text-3xl tracking-[0.5em] font-extrabold py-3 px-4 rounded-2xl border-2 border-emerald-300 focus:border-emerald-500 focus:outline-none bg-emerald-50/40" />
+      <p id="pinError" class="text-xs text-rose-600 font-bold mt-2 hidden">PIN tidak tepat. Sila cuba lagi!</p>
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button onclick="closePinModal()" class="btn-3d btn-white py-3 rounded-2xl font-bold text-sm">Batal</button>
+        <button onclick="verifyPinSubmit()" class="btn-3d btn-green py-3 rounded-2xl font-bold text-sm">Sahkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL HAD MASA PENGGUNAAN KANAK-KANAK -->
+  <div id="timeLimitModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border-4 border-amber-300 text-center animate-pop">
+      <div class="text-5xl mb-3">⏰</div>
+      <h3 class="font-display text-2xl font-bold text-slate-800">Masa Rehat Mata!</h3>
+      <p class="text-slate-600 text-sm mt-2">Anda telah belajar dengan hebat hari ini! Had masa harian yang ditetapkan oleh ibu bapa telah tamat.</p>
+      <div class="mt-5 p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900">
+        Minta ibu bapa masukkan PIN penjaga jika ingin menambah masa pembelajaran.
+      </div>
+      <div class="mt-5 flex flex-col gap-2.5">
+        <button onclick="openPinModal('extendTime')" class="btn-3d btn-yellow py-3 rounded-2xl font-bold text-sm">🔓 Buka Kunci Penjaga</button>
+        <button onclick="navigateTo('roleSelect'); document.getElementById('timeLimitModal').classList.add('hidden')" class="btn-3d btn-white py-2.5 rounded-2xl font-bold text-xs">Kembali ke Menu Utama</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*************************************************************************
+     * 1. KONFIGURASI FIREBASE & PENYIMPANAN DATA (CLOUD + LOCALSTORAGE)
+     *************************************************************************/
+    const firebaseConfig = {
+      apiKey: "AIzaSyBg6ooegTBvZSoLg409OHcbYGS9BvZocpo",
+      authDomain: "edukids-e6f6e.firebaseapp.com",
+      databaseURL: "https://edukids-e6f6e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "edukids-e6f6e",
+      storageBucket: "edukids-e6f6e.firebasestorage.app",
+      messagingSenderId: "305423922650",
+      appId: "1:305423922650:web:73b2ec897059fc6d173ce3"
+    };
+
+    let fbDb = null;
+    let fbConnected = false;
+    let deviceUserId = localStorage.getItem('jawipro_device_uid');
+    if (!deviceUserId) {
+      deviceUserId = 'jp_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
+      localStorage.setItem('jawipro_device_uid', deviceUserId);
+    }
+
+    function initFirebase() {
+      try {
+        if (typeof firebase !== 'undefined') {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          fbDb = firebase.database();
+          const connectedRef = fbDb.ref('.info/connected');
+          connectedRef.on('value', (snap) => {
+            fbConnected = !!snap.val();
+            updateSyncIndicator();
+          });
+          // Cuba log masuk tanpa nama jika diaktifkan di projek Firebase
+          if (firebase.auth) {
+            firebase.auth().signInAnonymously().catch(() => {
+              // Teruskan dengan pangkalan data / localStorage jika auth tanpa nama tidak aktif
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Mod luar talian diaktifkan:', err);
+        fbConnected = false;
+        updateSyncIndicator();
+      }
+    }
+
+    function updateSyncIndicator() {
+      const badge = document.getElementById('syncBadge');
+      const text = document.getElementById('syncText');
+      if (!badge || !text) return;
+      if (fbConnected) {
+        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700';
+        text.textContent = 'Firebase Aktif';
+      } else {
+        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800';
+        text.textContent = 'Simpanan Peranti';
+      }
+    }
+
+    /*************************************************************************
+     * 2. DATA KANDUNGAN JAWI MALAYSIA (SAHIH & LENGKAP)
+     *************************************************************************/
+    const JAWI_LETTERS = [
+      { char: 'ا', name: 'Alif', sound: 'a / e', pron: 'A-lif', exampleJawi: 'ايم', exampleRumi: 'Ayam', icon: '🐔', initial: 'ا', medial: 'ـا', final: 'ـا', connector: false, desc: 'Huruf pertama dalam abjad Jawi. Tidak boleh bersambung dengan huruf selepasnya.' },
+      { char: 'ب', name: 'Ba', sound: 'b', pron: 'Ba', exampleJawi: 'بوكو', exampleRumi: 'Buku', icon: '📘', initial: 'بـ', medial: 'ـبـ', final: 'ـب', connector: true, desc: 'Mempunyai satu titik di bawah. Boleh bersambung di awal, tengah dan akhir.' },
+      { char: 'ت', name: 'Ta', sound: 't', pron: 'Ta', exampleJawi: 'تالي', exampleRumi: 'Tali', icon: '🪢', initial: 'تـ', medial: 'ـتـ', final: 'ـت', connector: true, desc: 'Mempunyai dua titik di atas.' },
+      { char: 'ة', name: 'Ta Marbutah', sound: 't / h', pron: 'Ta Mar-bu-tah', exampleJawi: 'زكاة', exampleRumi: 'Zakat', icon: '🕌', initial: '—', medial: '—', final: 'ـة', connector: false, desc: 'Biasanya berada di akhir kata serapan bahasa Arab.' },
+      { char: 'ث', name: 'Tha', sound: 's / th', pron: 'Tha', exampleJawi: 'ثلاث', exampleRumi: 'Selasa', icon: '📅', initial: 'ثـ', medial: 'ـثـ', final: 'ـث', connector: true, desc: 'Mempunyai tiga titik di atas.' },
+      { char: 'ج', name: 'Jim', sound: 'j', pron: 'Jim', exampleJawi: 'جاري', exampleRumi: 'Jari', icon: '🖐️', initial: 'جـ', medial: 'ـجـ', final: 'ـج', connector: true, desc: 'Mempunyai satu titik di tengah perut huruf.' },
+      { char: 'چ', name: 'Ca', sound: 'c', pron: 'Ca', exampleJawi: 'چاون', exampleRumi: 'Cawan', icon: '☕', initial: 'چـ', medial: 'ـچـ', final: 'ـچ', connector: true, desc: 'Huruf khas Jawi! Mempunyai tiga titik di tengah.' },
+      { char: 'ح', name: 'Ha', sound: 'h', pron: 'Ha Pedas', exampleJawi: 'حلال', exampleRumi: 'Halal', icon: '✅', initial: 'حـ', medial: 'ـحـ', final: 'ـح', connector: true, desc: 'Tiada titik, disebut dengan bersih dari kerongkong.' },
+      { char: 'خ', name: 'Kha', sound: 'kh', pron: 'Kha', exampleJawi: 'خميس', exampleRumi: 'Khamis', icon: '🗓️', initial: 'خـ', medial: 'ـخـ', final: 'ـخ', connector: true, desc: 'Mempunyai satu titik di atas kepala.' },
+      { char: 'د', name: 'Dal', sound: 'd', pron: 'Dal', exampleJawi: 'داون', exampleRumi: 'Daun', icon: '🍃', initial: 'د', medial: 'ـد', final: 'ـد', connector: false, desc: 'Huruf pemutus: tidak bersambung dengan huruf selepasnya.' },
+      { char: 'ذ', name: 'Dzal', sound: 'z / dz', pron: 'Dzal', exampleJawi: 'ذكر', exampleRumi: 'Zikir', icon: '📿', initial: 'ذ', medial: 'ـذ', final: 'ـذ', connector: false, desc: 'Satu titik di atas. Tidak bersambung dengan huruf selepasnya.' },
+      { char: 'ر', name: 'Ra', sound: 'r', pron: 'Ra', exampleJawi: 'رودا', exampleRumi: 'Roda', icon: '🛞', initial: 'ر', medial: 'ـر', final: 'ـر', connector: false, desc: 'Huruf pemutus: tidak bersambung dengan huruf selepasnya.' },
+      { char: 'ز', name: 'Zai', sound: 'z', pron: 'Zai', exampleJawi: 'زيرافه', exampleRumi: 'Zirafah', icon: '🦒', initial: 'ز', medial: 'ـز', final: 'ـز', connector: false, desc: 'Satu titik di atas Ra. Tidak bersambung selepasnya.' },
+      { char: 'س', name: 'Sin', sound: 's', pron: 'Sin', exampleJawi: 'سوسو', exampleRumi: 'Susu', icon: '🥛', initial: 'سـ', medial: 'ـسـ', final: 'ـس', connector: true, desc: 'Mempunyai tiga gigi kecil tanpa titik.' },
+      { char: 'ش', name: 'Syin', sound: 'sy', pron: 'Syin', exampleJawi: 'شامڤو', exampleRumi: 'Syampu', icon: '🧴', initial: 'شـ', medial: 'ـشـ', final: 'ـش', connector: true, desc: 'Mempunyai tiga gigi dan tiga titik di atas.' },
+      { char: 'ص', name: 'Sad', sound: 's', pron: 'Sad', exampleJawi: 'صابون', exampleRumi: 'Sabun', icon: '🧼', initial: 'صـ', medial: 'ـصـ', final: 'ـص', connector: true, desc: 'Bunyi S tebal tanpa titik.' },
+      { char: 'ض', name: 'Dad', sound: 'd', pron: 'Dad', exampleJawi: 'ضحى', exampleRumi: 'Dhuha', icon: '☀️', initial: 'ضـ', medial: 'ـضـ', final: 'ـض', connector: true, desc: 'Mempunyai satu titik di atas.' },
+      { char: 'ط', name: 'Ta (Tebal)', sound: 't', pron: 'Tho', exampleJawi: 'طواف', exampleRumi: 'Tawaf', icon: '🕋', initial: 'طـ', medial: 'ـطـ', final: 'ـط', connector: true, desc: 'Tiada titik, bertiang tegak di atas.' },
+      { char: 'ظ', name: 'Za (Tebal)', sound: 'z', pron: 'Zho', exampleJawi: 'ظاهر', exampleRumi: 'Zahir', icon: '👁️', initial: 'ظـ', medial: 'ـظـ', final: 'ـظ', connector: true, desc: 'Satu titik di sebelah tiang.' },
+      { char: 'ع', name: 'Ain', sound: 'a / k', pron: 'Ain', exampleJawi: 'علمو', exampleRumi: 'Ilmu', icon: '🎓', initial: 'عـ', medial: 'ـعـ', final: 'ـع', connector: true, desc: 'Tiada titik, berbentuk kepala terbuka di awal.' },
+      { char: 'غ', name: 'Ghain', sound: 'gh', pron: 'Ghain', exampleJawi: 'غائب', exampleRumi: 'Ghaib', icon: '✨', initial: 'غـ', medial: 'ـغـ', final: 'ـغ', connector: true, desc: 'Satu titik di atas Ain.' },
+      { char: 'ڠ', name: 'Nga', sound: 'ng', pron: 'Nga', exampleJawi: 'ڠاڠا', exampleRumi: 'Nganga', icon: '😮', initial: 'ڠـ', medial: 'ـڠـ', final: 'ـڠ', connector: true, desc: 'Huruf khas Jawi! Tiga titik di atas Ain.' },
+      { char: 'ف', name: 'Fa', sound: 'f', pron: 'Fa', exampleJawi: 'فوتو', exampleRumi: 'Foto', icon: '📷', initial: 'فـ', medial: 'ـفـ', final: 'ـف', connector: true, desc: 'Mempunyai satu titik di atas.' },
+      { char: 'ڤ', name: 'Pa', sound: 'p', pron: 'Pa', exampleJawi: 'ڤيسڠ', exampleRumi: 'Pisang', icon: '🍌', initial: 'ڤـ', medial: 'ـڤـ', final: 'ـڤ', connector: true, desc: 'Huruf khas Jawi! Mempunyai tiga titik di atas.' },
+      { char: 'ق', name: 'Qaf', sound: 'q / k', pron: 'Qaf', exampleJawi: 'قلم', exampleRumi: 'Qalam', icon: '✒️', initial: 'قـ', medial: 'ـقـ', final: 'ـق', connector: true, desc: 'Mempunyai dua titik di atas.' },
+      { char: 'ك', name: 'Kaf', sound: 'k', pron: 'Kaf', exampleJawi: 'كوچيڠ', exampleRumi: 'Kucing', icon: '🐱', initial: 'كـ', medial: 'ـكـ', final: 'ـك', connector: true, desc: 'Tiada titik, digunakan untuk bunyi K.' },
+      { char: 'ݢ', name: 'Ga', sound: 'g', pron: 'Ga', exampleJawi: 'ݢاجه', exampleRumi: 'Gajah', icon: '🐘', initial: 'ݢـ', medial: 'ـݢـ', final: 'ـݢ', connector: true, desc: 'Huruf khas Jawi! Kaf dengan satu titik di atas.' },
+      { char: 'ل', name: 'Lam', sound: 'l', pron: 'Lam', exampleJawi: 'ليمو', exampleRumi: 'Limau', icon: '🍊', initial: 'لـ', medial: 'ـلـ', final: 'ـل', connector: true, desc: 'Tinggi seperti Alif tetapi bersambung ke kiri.' },
+      { char: 'م', name: 'Mim', sound: 'm', pron: 'Mim', exampleJawi: 'مات', exampleRumi: 'Mata', icon: '👀', initial: 'مـ', medial: 'ـمـ', final: 'ـم', connector: true, desc: 'Bulatan kecil di kepala tanpa titik.' },
+      { char: 'ن', name: 'Nun', sound: 'n', pron: 'Nun', exampleJawi: 'ناسي', exampleRumi: 'Nasi', icon: '🍚', initial: 'نـ', medial: 'ـنـ', final: 'ـن', connector: true, desc: 'Mangkuk bulat dengan satu titik di atas.' },
+      { char: 'و', name: 'Wau', sound: 'w / u / o', pron: 'Wau', exampleJawi: 'واو', exampleRumi: 'Wau', icon: '🪁', initial: 'و', medial: 'ـو', final: 'ـو', connector: false, desc: 'Huruf pemutus: tidak bersambung selepasnya.' },
+      { char: 'ۏ', name: 'Va', sound: 'v', pron: 'Va', exampleJawi: 'ۏان', exampleRumi: 'Van', icon: '🚐', initial: 'ۏ', medial: 'ـۏ', final: 'ـۏ', connector: false, desc: 'Huruf khas Jawi! Wau bertitik satu di atas.' },
+      { char: 'ه', name: 'Ha (Simpul)', sound: 'h', pron: 'Ha Simpul', exampleJawi: 'هاريماو', exampleRumi: 'Harimau', icon: '🐯', initial: 'هـ', medial: 'ـهـ', final: 'ـه', connector: true, desc: 'Berbentuk simpul di awal dan tengah perkataan.' },
+      { char: 'ء', name: 'Hamzah', sound: 'k / hentian', pron: 'Ham-zah', exampleJawi: 'اءير', exampleRumi: 'Air', icon: '💧', initial: 'ء', medial: 'ء', final: 'ء', connector: false, desc: 'Hamzah tunggal tidak bersambung dengan huruf lain.' },
+      { char: 'ي', name: 'Ya', sound: 'y / i / e', pron: 'Ya', exampleJawi: 'يو', exampleRumi: 'Yu', icon: '🦈', initial: 'يـ', medial: 'ـيـ', final: 'ـي', connector: true, desc: 'Mempunyai dua titik di bawah.' },
+      { char: 'ى', name: 'Ye', sound: 'e pepet / a', pron: 'Ye', exampleJawi: 'موسى', exampleRumi: 'Musa', icon: '📜', initial: '—', medial: '—', final: 'ـى', connector: false, desc: 'Ya tanpa titik di hujung perkataan.' },
+      { char: 'ڽ', name: 'Nya', sound: 'ny', pron: 'Nya', exampleJawi: 'ڽاموق', exampleRumi: 'Nyamuk', icon: '🦟', initial: 'ڽـ', medial: 'ـڽـ', final: 'ـڽ', connector: true, desc: 'Huruf khas Jawi! Mempunyai tiga titik.' }
+    ];
+
+    const SUKU_KATA_LIST = [
+      { konsonan: 'ب', vokal: 'ا', gabung: 'با', rumi: 'ba', contoh: 'باجو (Baju)' },
+      { konsonan: 'ب', vokal: 'ي', gabung: 'بي', rumi: 'bi', contoh: 'بيرو (Biru)' },
+      { konsonan: 'ب', vokal: 'و', gabung: 'بو', rumi: 'bu', contoh: 'بوكو (Buku)' },
+      { konsonan: 'س', vokal: 'ا', gabung: 'سا', rumi: 'sa', contoh: 'ساتو (Satu)' },
+      { konsonan: 'س', vokal: 'ي', gabung: 'سي', rumi: 'si', contoh: 'سيكو (Siku)' },
+      { konsonan: 'س', vokal: 'و', gabung: 'سو', rumi: 'su', contoh: 'سوسو (Susu)' },
+      { konsonan: 'م', vokal: 'ا', gabung: 'ما', rumi: 'ma', contoh: 'مات (Mata)' },
+      { konsonan: 'م', vokal: 'ي', gabung: 'مي', rumi: 'mi', contoh: 'ميجا (Meja)' },
+      { konsonan: 'م', vokal: 'و', gabung: 'مو', rumi: 'mu', contoh: 'موك (Muka)' },
+      { konsonan: 'چ', vokal: 'ا', gabung: 'چا', rumi: 'ca', contoh: 'چاون (Cawan)' },
+      { konsonan: 'چ', vokal: 'ي', gabung: 'چي', rumi: 'ci', contoh: 'چيلي (Cili)' },
+      { konsonan: 'چ', vokal: 'و', gabung: 'چو', rumi: 'cu', contoh: 'چوچي (Cuci)' },
+      { konsonan: 'ڤ', vokal: 'ا', gabung: 'ڤا', rumi: 'pa', contoh: 'ڤاكو (Paku)' },
+      { konsonan: 'ڤ', vokal: 'ي', gabung: 'ڤي', rumi: 'pi', contoh: 'ڤيڤي (Pipi)' },
+      { konsonan: 'ڤ', vokal: 'و', gabung: 'ڤو', rumi: 'pu', contoh: 'ڤوكوق (Pokok)' },
+      { konsonan: 'ݢ', vokal: 'ا', gabung: 'ݢا', rumi: 'ga', contoh: 'ݢاجه (Gajah)' },
+      { konsonan: 'ݢ', vokal: 'ي', gabung: 'ݢي', rumi: 'gi', contoh: 'ݢيݢي (Gigi)' },
+      { konsonan: 'ݢ', vokal: 'و', gabung: 'ݢو', rumi: 'gu', contoh: 'ݢولا (Gula)' }
+    ];
+
+    const DEFAULT_WORDS = [
+      // Haiwan
+      { id: 'w1', cat: 'Haiwan', rumi: 'Kucing', jawi: 'كوچيڠ', letters: ['ك', 'و', 'چ', 'ي', 'ڠ'], icon: '🐱' },
+      { id: 'w2', cat: 'Haiwan', rumi: 'Ayam', jawi: 'ايم', letters: ['ا', 'ي', 'م'], icon: '🐔' },
+      { id: 'w3', cat: 'Haiwan', rumi: 'Ikan', jawi: 'ايكن', letters: ['ا', 'ي', 'ك', 'ن'], icon: '🐟' },
+      { id: 'w4', cat: 'Haiwan', rumi: 'Gajah', jawi: 'ݢاجه', letters: ['ݢ', 'ا', 'ج', 'ه'], icon: '🐘' },
+      { id: 'w5', cat: 'Haiwan', rumi: 'Harimau', jawi: 'هاريماو', letters: ['ه', 'ا', 'ر', 'ي', 'م', 'ا', 'و'], icon: '🐯' },
+      // Buah-buahan
+      { id: 'w6', cat: 'Buah-buahan', rumi: 'Epal', jawi: 'ايڤل', letters: ['ا', 'ي', 'ڤ', 'ل'], icon: '🍎' },
+      { id: 'w7', cat: 'Buah-buahan', rumi: 'Pisang', jawi: 'ڤيسڠ', letters: ['ڤ', 'ي', 'س', 'ڠ'], icon: '🍌' },
+      { id: 'w8', cat: 'Buah-buahan', rumi: 'Durian', jawi: 'دورين', letters: ['د', 'و', 'ر', 'ي', 'ن'], icon: '🦔' },
+      { id: 'w9', cat: 'Buah-buahan', rumi: 'Rambutan', jawi: 'رمبوتن', letters: ['ر', 'م', 'ب', 'و', 'ت', 'ن'], icon: '🍒' },
+      { id: 'w10', cat: 'Buah-buahan', rumi: 'Mangga', jawi: 'مڠݢ', letters: ['م', 'ڠ', 'ݢ'], icon: '🥭' },
+      // Anggota Badan
+      { id: 'w11', cat: 'Anggota Badan', rumi: 'Mata', jawi: 'مات', letters: ['م', 'ا', 'ت'], icon: '👀' },
+      { id: 'w12', cat: 'Anggota Badan', rumi: 'Hidung', jawi: 'هيدوڠ', letters: ['ه', 'ي', 'د', 'و', 'ڠ'], icon: '👃' },
+      { id: 'w13', cat: 'Anggota Badan', rumi: 'Tangan', jawi: 'تاڠن', letters: ['ت', 'ا', 'ڠ', 'ن'], icon: '✋' },
+      { id: 'w14', cat: 'Anggota Badan', rumi: 'Kaki', jawi: 'كاكي', letters: ['ك', 'ا', 'ك', 'ي'], icon: '🦶' },
+      { id: 'w15', cat: 'Anggota Badan', rumi: 'Mulut', jawi: 'مولوت', letters: ['م', 'و', 'ل', 'و', 'ت'], icon: '👄' },
+      // Keluarga
+      { id: 'w16', cat: 'Keluarga', rumi: 'Ibu', jawi: 'ايبو', letters: ['ا', 'ي', 'ب', 'و'], icon: '👩' },
+      { id: 'w17', cat: 'Keluarga', rumi: 'Ayah', jawi: 'ايه', letters: ['ا', 'ي', 'ه'], icon: '👨' },
+      { id: 'w18', cat: 'Keluarga', rumi: 'Abang', jawi: 'ابڠ', letters: ['ا', 'ب', 'ڠ'], icon: '👦' },
+      { id: 'w19', cat: 'Keluarga', rumi: 'Kakak', jawi: 'كاكق', letters: ['ك', 'ا', 'ك', 'ق'], icon: '👧' },
+      { id: 'w20', cat: 'Keluarga', rumi: 'Adik', jawi: 'اديق', letters: ['ا', 'د', 'ي', 'ق'], icon: '👶' },
+      // Benda di Rumah
+      { id: 'w21', cat: 'Benda di Rumah', rumi: 'Kerusi', jawi: 'كروسي', letters: ['ك', 'ر', 'و', 'س', 'ي'], icon: '🪑' },
+      { id: 'w22', cat: 'Benda di Rumah', rumi: 'Meja', jawi: 'ميجا', letters: ['م', 'ي', 'ج', 'ا'], icon: '🪵' },
+      { id: 'w23', cat: 'Benda di Rumah', rumi: 'Pintu', jawi: 'ڤينتو', letters: ['ڤ', 'ي', 'ن', 'ت', 'و'], icon: '🚪' },
+      { id: 'w24', cat: 'Benda di Rumah', rumi: 'Katil', jawi: 'كاتيل', letters: ['ك', 'ا', 'ت', 'ي', 'ل'], icon: '🛏️' },
+      { id: 'w25', cat: 'Benda di Rumah', rumi: 'Cawan', jawi: 'چاون', letters: ['چ', 'ا', 'و', 'ن'], icon: '☕' },
+      // Benda di Sekolah
+      { id: 'w26', cat: 'Benda di Sekolah', rumi: 'Buku', jawi: 'بوكو', letters: ['ب', 'و', 'ك', 'و'], icon: '📚' },
+      { id: 'w27', cat: 'Benda di Sekolah', rumi: 'Pensel', jawi: 'ڤينسيل', letters: ['ڤ', 'ي', 'ن', 'س', 'ي', 'ل'], icon: '✏️' },
+      { id: 'w28', cat: 'Benda di Sekolah', rumi: 'Beg', jawi: 'بيݢ', letters: ['ب', 'ي', 'ݢ'], icon: '🎒' },
+      { id: 'w29', cat: 'Benda di Sekolah', rumi: 'Cikgu', jawi: 'چيکݢو', letters: ['چ', 'ي', 'ك', 'ݢ', 'و'], icon: '👩‍🏫' },
+      { id: 'w30', cat: 'Benda di Sekolah', rumi: 'Sekolah', jawi: 'سكوله', letters: ['س', 'ك', 'و', 'ل', 'ه'], icon: '🏫' }
+    ];
+
+    const READING_STORIES = [
+      {
+        id: 's1',
+        type: 'Ayat Pendek',
+        titleJawi: 'ساي سايڠ ايبو دان ايه',
+        titleRumi: 'Saya Sayang Ibu dan Ayah',
+        lines: [
+          { jawi: 'اين ايبو ساي.', rumi: 'Ini ibu saya.' },
+          { jawi: 'اين ايه ساي.', rumi: 'Ini ayah saya.' },
+          { jawi: 'ساي سايڠ ايبو دان ايه.', rumi: 'Saya sayang ibu dan ayah.' },
+          { jawi: 'كامي هيدوڤ بهاݢيا.', rumi: 'Kami hidup bahagia.' }
+        ],
+        question: 'Siapakah yang disayangi dalam petikan ini?',
+        options: ['Ibu dan ayah', 'Kucing dan ayam', 'Guru dan rakan'],
+        answer: 0
+      },
+      {
+        id: 's2',
+        type: 'Dialog Ringkas',
+        titleJawi: 'سلامت ڤاݢي چيکݢو!',
+        titleRumi: 'Selamat Pagi Cikgu!',
+        lines: [
+          { jawi: 'علي: السلام عليكم، سلامت ڤاݢي چيکݢو.', rumi: 'Ali: Assalamualaikum, selamat pagi cikgu.' },
+          { jawi: 'چيکݢو: وعليكم السلام علي، ماري ماسوق كلس.', rumi: 'Cikgu: Waalaikumussalam Ali, mari masuk kelas.' },
+          { jawi: 'علي: ساي سوك بلاجر توليسن جاوي.', rumi: 'Ali: Saya suka belajar tulisan Jawi.' },
+          { jawi: 'چيکݢو: باݢوس علي! ماري كيت ممباچ برسام-سام.', rumi: 'Cikgu: Bagus Ali! Mari kita membaca bersama-sama.' }
+        ],
+        question: 'Apakah yang disukai oleh Ali?',
+        options: ['Bermain bola', 'Belajar tulisan Jawi', 'Makan pisang'],
+        answer: 1
+      },
+      {
+        id: 's3',
+        type: 'Cerita Pendek',
+        titleJawi: 'كوچيڠ كچيل ساي',
+        titleRumi: 'Kucing Kecil Saya',
+        lines: [
+          { jawi: 'ساي اد سيكور كوچيڠ كچيل.', rumi: 'Saya ada seekor kucing kecil.' },
+          { jawi: 'نام كوچيڠ ايت سي تومڤوق.', rumi: 'Nama kucing itu Si Tompok.' },
+          { jawi: 'بولو سي تومڤوق ورنا ڤوتيه دان كونيڠ.', rumi: 'Bulu Si Tompok warna putih dan kuning.' },
+          { jawi: 'ستياڤ ڤاݢي سي تومڤوق مينوم سوسو.', rumi: 'Setiap pagi Si Tompok minum susu.' }
+        ],
+        question: 'Apakah yang diminum oleh Si Tompok setiap pagi?',
+        options: ['Air sirap', 'Susu', 'Jus oren'],
+        answer: 1
+      }
+    ];
+
+    const WRITING_PROMPTS = [
+      { id: 'wr1', category: 'Huruf Tunggal', jawi: 'ب', rumi: 'Huruf Ba (1 titik di bawah)', hint: 'Mula dari kanan ke kiri, kemudian letak 1 titik di bawah.' },
+      { id: 'wr2', category: 'Huruf Tunggal', jawi: 'چ', rumi: 'Huruf Ca (3 titik di tengah)', hint: 'Lengkung kepala dari kiri ke kanan, turun lengkung besar & 3 titik.' },
+      { id: 'wr3', category: 'Huruf Tunggal', jawi: 'ڠ', rumi: 'Huruf Nga (3 titik di atas)', hint: 'Kepala kecil di atas garisan, badan melengkung ke bawah & 3 titik.' },
+      { id: 'wr4', category: 'Huruf Bersambung', jawi: 'با', rumi: 'Suku Kata Ba-Alif (با)', hint: 'Tarik dari kanan ke kiri terus naik menegak ke atas untuk Alif.' },
+      { id: 'wr5', category: 'Huruf Bersambung', jawi: 'ساي', rumi: 'Perkataan Saya (ساي)', hint: 'Sambungkan Sin dan Alif, diikuti huruf Ya di sebelah kiri.' },
+      { id: 'wr6', category: 'Perkataan', jawi: 'بوكو', rumi: 'Perkataan Buku (بوكو)', hint: 'Tulis باو (Bu) dan كاو (Ku) dari kanan ke kiri.' },
+      { id: 'wr7', category: 'Perkataan', jawi: 'ايبو', rumi: 'Perkataan Ibu (ايبو)', hint: 'Alif tunggal di kanan, diikuti Ya-Ba-Wau bersambung.' },
+      { id: 'wr8', category: 'Ayat Pendek', jawi: 'ساي سوك جاوي', rumi: 'Ayat: Saya Suka Jawi', hint: 'Tulis tiga perkataan dengan jarak kemas dari kanan ke kiri.' }
+    ];
+
+    const DEFAULT_QUIZ_BANK = [
+      { id: 'q1', cat: 'Mengenal Huruf', diff: 'Mudah', q: 'Huruf Jawi manakah yang mempunyai 3 titik di tengah?', jawiPrompt: '', options: ['ج', 'چ', 'ح', 'خ'], answer: 1, exp: 'Huruf چ (Ca) ialah huruf khas Jawi yang mempunyai 3 titik di tengah.' },
+      { id: 'q2', cat: 'Mengenal Huruf', diff: 'Mudah', q: 'Apakah nama bagi huruf Jawi ini?', jawiPrompt: 'ڠ', options: ['Ain', 'Ghain', 'Nga', 'Nya'], answer: 2, exp: 'Huruf ڠ bernama Nga dan berbunyi "ng" seperti dalam perkataan Nganga.' },
+      { id: 'q3', cat: 'Mengenal Huruf', diff: 'Mudah', q: 'Huruf Jawi manakah yang berbunyi "p" seperti dalam perkataan Pisang?', jawiPrompt: '', options: ['ف', 'ق', 'ڤ', 'ك'], answer: 2, exp: 'Huruf ڤ (Pa) bertitik tiga di atas digunakan untuk bunyi "p".' },
+      { id: 'q4', cat: 'Bentuk Huruf', diff: 'Sederhana', q: 'Huruf manakah di bawah TIDAK boleh bersambung dengan huruf selepasnya?', jawiPrompt: '', options: ['ب', 'س', 'د', 'م'], answer: 2, exp: 'Huruf د (Dal) ialah huruf pemutus (ا د ذ ر ز و ۏ ء) yang tidak bersambung selepasnya.' },
+      { id: 'q5', cat: 'Bentuk Huruf', diff: 'Sederhana', q: 'Bagaimanakah bentuk huruf ك (Kaf) apabila berada di awal perkataan seperti كوچيڠ?', jawiPrompt: 'ك', options: ['كـ', 'ـكـ', 'ـك', 'ݢـ'], answer: 0, exp: 'Apabila di awal perkataan, Kaf ditulis كـ untuk bersambung dengan huruf berikutnya.' },
+      { id: 'q6', cat: 'Suku Kata', diff: 'Mudah', q: 'Gabungan huruf ب + و menghasilkan suku kata apa?', jawiPrompt: 'ب + و', options: ['با (ba)', 'بي (bi)', 'بو (bu)', 'اب (ab)'], answer: 2, exp: 'Huruf Ba (ب) bertemu vokal Wau (و) menjadi بو (bu).' },
+      { id: 'q7', cat: 'Suku Kata', diff: 'Sederhana', q: 'Pilih ejaan suku kata "nya" yang tepat:', jawiPrompt: '', options: ['نا', 'ڽا', 'ڠا', 'يا'], answer: 1, exp: 'Huruf Nya (ڽ) + Alif (ا) menghasilkan ڽا (nya).' },
+      { id: 'q8', cat: 'Perkataan', diff: 'Mudah', q: 'Apakah maksud perkataan Jawi ini?', jawiPrompt: 'كوچيڠ', options: ['Ayam', 'Kucing', 'Gajah', 'Ikan'], answer: 1, exp: 'كوچيڠ dieja Kaf-Wau-Ca-Ya-Nga yang berbunyi Kucing.' },
+      { id: 'q9', cat: 'Ejaan Jawi', diff: 'Sederhana', q: 'Pilih ejaan Jawi yang betul bagi perkataan "Sekolah":', jawiPrompt: 'Sekolah', options: ['سكوله', 'سيكوله', 'سقوله', 'سكولا'], answer: 0, exp: 'Mengikut ejaan Jawi rasmi DBP, Sekolah dieja سكوله.' },
+      { id: 'q10', cat: 'Ejaan Jawi', diff: 'Sukar', q: 'Pilih ejaan Jawi yang tepat bagi perkataan "Gajah":', jawiPrompt: 'Gajah', options: ['كاجه', 'ݢاجه', 'ݢاجاه', 'جاݢه'], answer: 1, exp: 'Gajah menggunakan huruf Ga (ݢ) dan dieja ݢاجه (tanpa Alif pada suku kata tertutup akhir).' },
+      { id: 'q11', cat: 'Membaca Ayat', diff: 'Sederhana', q: 'Baca ayat berikut dan pilih maksudnya yang betul:', jawiPrompt: 'ساي سوك ممباچ بوكو', options: ['Saya suka makan nasi', 'Saya suka membaca buku', 'Saya pergi ke sekolah', 'Saya sayang ibu bapa'], answer: 1, exp: 'ساي (Saya) سوك (suka) ممباچ (membaca) بوكو (buku).' },
+      { id: 'q12', cat: 'Membaca Ayat', diff: 'Sukar', q: 'Lengkapkan ayat: "ايبو ممبلي _____ دي ڤاسر." (Ibu membeli pisang di pasar)', jawiPrompt: '', options: ['ڤيسڠ', 'بوكو', 'كروسي', 'ڤينسيل'], answer: 0, exp: 'ڤيسڠ bermaksud Pisang yang dibeli di pasar.' }
+    ];
+
+    const BADGES_META = [
+      { id: 'b_huruf', title: 'Juara Huruf', icon: '🔤', desc: 'Terokai sekurang-kurangnya 10 huruf Jawi dalam Akademi.', reqType: 'letters', reqVal: 10 },
+      { id: 'b_sukukata', title: 'Pakar Suku Kata', icon: '🧩', desc: 'Selesaikan latihan Suku Kata & Bina Perkataan.', reqType: 'modules', reqVal: 2 },
+      { id: 'b_ejaan', title: 'Raja Ejaan', icon: '👑', desc: 'Capai skor 80% atau lebih dalam Kuiz Pintar.', reqType: 'quizHigh', reqVal: 1 },
+      { id: 'b_membaca', title: 'Master Membaca', icon: '📖', desc: 'Selesaikan petikan dalam modul Membaca Ayat Jawi.', reqType: 'reading', reqVal: 1 },
+      { id: 'b_menulis', title: 'Juara Menulis', icon: '✍️', desc: 'Simpan sekurang-kurangnya 2 hasil latihan menulis digital.', reqType: 'writing', reqVal: 2 },
+      { id: 'b_champion', title: 'JawiPro Champion', icon: '🏆', desc: 'Kumpul sekurang-kurangnya 300 XP dan 15 Bintang!', reqType: 'xp', reqVal: 300 }
+    ];
+
+    /*************************************************************************
+     * 3. STATE APLIKASI & PROFIL MURID
+     *************************************************************************/
+    const defaultState = {
+      currentView: 'splash',
+      selectedRole: 'student',
+      parentPin: '1234',
+      timeLimitMinutes: 45,
+      sessionSecondsToday: 0,
+      audioMuted: false,
+      notificationsEnabled: true,
+      activeStudentId: 'stu_1',
+      students: [
+        {
+          id: 'stu_1',
+          name: 'Aiman',
+          avatar: '🦁',
+          age: 8,
+          stage: 'Tahap 2 (8–9 Tahun)',
+          xp: 120,
+          stars: 8,
+          streak: 3,
+          lastActiveDate: new Date().toISOString().slice(0, 10),
+          lastActivityLabel: 'Modul 1: Kenali Huruf Jawi',
+          lastActivityView: 'academy_1',
+          exploredLetters: ['ا', 'ب', 'ت', 'چ', 'ݢ'],
+          completedModules: ['m1'],
+          gamesPlayed: 1,
+          quizzesTaken: 1,
+          quizHighScores: 1,
+          wordsRead: 5,
+          writingSaved: [],
+          quizHistory: [
+            { date: 'Hari Ini', cat: 'Mengenal Huruf', score: 80, stars: 2 }
+          ],
+          dailyMissions: {
+            date: new Date().toISOString().slice(0, 10),
+            lettersCount: 3,
+            gamesCount: 1,
+            quizCount: 2,
+            wordsCount: 3,
+            writingCount: 0,
+            claimed: {}
+          },
+          badges: ['b_membaca'],
+          assignedTasks: ['Modul 2: Bentuk & Kedudukan Huruf', 'Permainan: Cari Huruf']
+        }
+      ],
+      customWords: [...DEFAULT_WORDS],
+      customQuizzes: [...DEFAULT_QUIZ_BANK],
+      xpPerAction: 25
+    };
+
+    let appState = loadAppState();
+
+    function loadAppState() {
+      try {
+        const raw = localStorage.getItem('jawipro_state_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const merged = { ...defaultState, ...parsed };
+          // Tetapkan semula misi harian jika hari baharu
+          const today = new Date().toISOString().slice(0, 10);
+          merged.students.forEach(s => {
+            if (!s.dailyMissions || s.dailyMissions.date !== today) {
+              s.dailyMissions = {
+                date: today,
+                lettersCount: 0,
+                gamesCount: 0,
+                quizCount: 0,
+                wordsCount: 0,
+                writingCount: 0,
+                claimed: {}
+              };
+            }
+          });
+          return merged;
+        }
+      } catch (e) {
+        console.warn('Ralat memuatkan state:', e);
+      }
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+
+    function saveAppState() {
+      try {
+        localStorage.setItem('jawipro_state_v1', JSON.stringify(appState));
+        if (fbDb && fbConnected) {
+          fbDb.ref('jawipro_users/' + deviceUserId).set({
+            updatedAt: Date.now(),
+            students: appState.students,
+            timeLimitMinutes: appState.timeLimitMinutes,
+            xpPerAction: appState.xpPerAction
+          }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn('Ralat menyimpan state:', e);
+      }
+      updateNavbarStats();
+    }
+
+    function getActiveStudent() {
+      return appState.students.find(s => s.id === appState.activeStudentId) || appState.students[0];
+    }
+
+    function computeLevel(xp) {
+      return Math.floor(xp / 100) + 1;
+    }
+
+    /*************************************************************************
+     * 4. SISTEM AUDIO (WEB AUDIO API + TEXT TO SPEECH BAHASA MELAYU)
+     *************************************************************************/
+    let audioCtx = null;
+
+    function playTone(type = 'click') {
+      if (appState.audioMuted) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(760, now + 0.08);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          osc.start(now);
+          osc.stop(now + 0.09);
+        } else if (type === 'correct') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.09); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.18); // G5
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+          osc.start(now);
+          osc.stop(now + 0.36);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(240, now);
+          osc.frequency.linearRampToValueAtTime(175, now + 0.22);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+          osc.start(now);
+          osc.stop(now + 0.24);
+        } else if (type === 'fanfare') {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(freq, now + idx * 0.11);
+            g.gain.setValueAtTime(0.18, now + idx * 0.11);
+            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.35);
+            o.start(now + idx * 0.11);
+            o.stop(now + idx * 0.11 + 0.35);
+          });
+        }
+      } catch (e) {}
+    }
+
+    function speakMalay(text, rate = 0.92) {
+      playTone('click');
+      if (appState.audioMuted) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const msVoice = voices.find(v => v.lang.toLowerCase().includes('ms')) ||
+                        voices.find(v => v.lang.toLowerCase().includes('id')) ||
+                        voices.find(v => v.lang.toLowerCase().includes('en'));
+        if (msVoice) utter.voice = msVoice;
+        utter.lang = 'ms-MY';
+        utter.rate = rate;
+        utter.pitch = 1.12;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function toggleAudioMute() {
+      appState.audioMuted = !appState.audioMuted;
+      document.getElementById('soundIcon').textContent = appState.audioMuted ? '🔇' : '🔊';
+      saveAppState();
+      if (!appState.audioMuted) {
+        playTone('correct');
+        showToast('Bunyi & suara diaktifkan! 🔊', 'success');
+      }
+    }
+
+    /*************************************************************************
+     * 5. NOTIFIKASI TOAST, GANJARAN XP/BINTANG & ANIMASI KONFETI
+     *************************************************************************/
+    function showToast(message, type = 'info') {
+      if (!appState.notificationsEnabled && type !== 'pin') return;
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const styles = {
+        success: 'bg-emerald-600 text-white border-emerald-300',
+        reward: 'bg-amber-400 text-amber-950 border-amber-200',
+        info: 'bg-sky-600 text-white border-sky-300',
+        warn: 'bg-rose-500 text-white border-rose-200'
+      };
+      el.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-xl border-2 font-bold text-xs sm:text-sm flex items-center gap-2.5 animate-pop ${styles[type] || styles.info}`;
+      el.innerHTML = `<span class="text-lg">${type === 'reward' ? '🌟' : type === 'success' ? '🎉' : type === 'warn' ? '💡' : '🤖'}</span><span>${message}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-8px)';
+        el.style.transition = 'all 0.25s ease';
+        setTimeout(() => el.remove(), 260);
+      }, 3200);
+    }
+
+    function awardProgress({ xp = 0, stars = 0, reason = '', missionType = null }) {
+      const stu = getActiveStudent();
+      const oldLevel = computeLevel(stu.xp);
+      stu.xp += xp;
+      stu.stars += stars;
+
+      if (missionType && stu.dailyMissions) {
+        if (missionType === 'letter') stu.dailyMissions.lettersCount += 1;
+        if (missionType === 'game') stu.dailyMissions.gamesCount += 1;
+        if (missionType === 'quiz') stu.dailyMissions.quizCount += 1;
+        if (missionType === 'word') stu.dailyMissions.wordsCount += 1;
+        if (missionType === 'writing') stu.dailyMissions.writingCount += 1;
+      }
+
+      checkAndUnlockBadges(stu);
+      saveAppState();
+
+      if (xp > 0 || stars > 0) {
+        showToast(`${reason ? reason + ' — ' : ''}+${xp} XP ${stars > 0 ? '& +' + stars + ' Bintang!' : ''}`, 'reward');
+      }
+
+      const newLevel = computeLevel(stu.xp);
+      if (newLevel > oldLevel) {
+        playTone('fanfare');
+        launchConfetti();
+        showToast(`Tahniah ${stu.name}! Anda naik ke Tahap ${newLevel}! 🚀`, 'success');
+      }
+    }
+
+    function checkAndUnlockBadges(stu) {
+      BADGES_META.forEach(b => {
+        if (stu.badges.includes(b.id)) return;
+        let unlocked = false;
+        if (b.reqType === 'letters' && stu.exploredLetters.length >= b.reqVal) unlocked = true;
+        if (b.reqType === 'modules' && stu.completedModules.length >= b.reqVal) unlocked = true;
+        if (b.reqType === 'quizHigh' && stu.quizHighScores >= b.reqVal) unlocked = true;
+        if (b.reqType === 'reading' && stu.wordsRead >= 3) unlocked = true;
+        if (b.reqType === 'writing' && stu.writingSaved.length >= b.reqVal) unlocked = true;
+        if (b.reqType === 'xp' && stu.xp >= b.reqVal && stu.stars >= 15) unlocked = true;
+
+        if (unlocked) {
+          stu.badges.push(b.id);
+          playTone('fanfare');
+          launchConfetti();
+          showToast(`Lencana Baharu Dibuka: ${b.title}! ${b.icon}`, 'reward');
+        }
+      });
+    }
+
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const pieces = Array.from({ length: 75 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: Math.random() * 7 + 4,
+        c: ['#10B981', '#FBBF24', '#38BDF8', '#F472B6', '#A78BFA'][Math.floor(Math.random() * 5)],
+        vy: Math.random() * 3.5 + 2.5,
+        vx: (Math.random() - 0.5) * 3,
+        rot: Math.random() * 360
+      }));
+
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          p.rot += 4;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.c;
+          ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 1.4);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 110) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      draw();
+    }
+
+    /*************************************************************************
+     * 6. ILUSTRASI MASKOT SVG "JAWIBOT"
+     *************************************************************************/
+    function getJawiBotSVG(sizeClass = 'w-28 h-28', mood = 'happy') {
+      return `
+        <svg viewBox="0 0 200 200" class="${sizeClass} animate-bot select-none drop-shadow-md" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cahaya Latar -->
+          <circle cx="100" cy="108" r="78" fill="#D1FAE5" opacity="0.65"/>
+          <!-- Antena -->
+          <line x1="100" y1="22" x2="100" y2="42" stroke="#059669" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="100" cy="18" r="9" fill="#FBBF24" stroke="#D97706" stroke-width="3"/>
+          <!-- Tanjak / Songkok Moden Hijau-Kuning -->
+          <path d="M58 55 L100 32 L142 55 L134 66 L66 66 Z" fill="#059669" stroke="#064E3B" stroke-width="3"/>
+          <path d="M74 55 L100 41 L126 55 Z" fill="#FBBF24"/>
+          <!-- Telinga Robot -->
+          <rect x="34" y="84" width="14" height="34" rx="7" fill="#38BDF8" stroke="#0284C7" stroke-width="3"/>
+          <rect x="152" y="84" width="14" height="34" rx="7" fill="#38BDF8" stroke="#0284C7" stroke-width="3"/>
+          <!-- Kepala Robot -->
+          <rect x="46" y="60" width="108" height="82" rx="28" fill="#10B981" stroke="#047857" stroke-width="4"/>
+          <!-- Skrin Muka -->
+          <rect x="58" y="72" width="84" height="56" rx="18" fill="#064E3B"/>
+          <!-- Mata Comel -->
+          <circle cx="82" cy="95" r="10" fill="#38BDF8"/>
+          <circle cx="85" cy="92" r="3.5" fill="#FFFFFF"/>
+          <circle cx="118" cy="95" r="10" fill="#38BDF8"/>
+          <circle cx="121" cy="92" r="3.5" fill="#FFFFFF"/>
+          <!-- Pipi Merah Jambu -->
+          <ellipse cx="70" cy="108" rx="6" ry="3.5" fill="#F472B6" opacity="0.8"/>
+          <ellipse cx="130" cy="108" rx="6" ry="3.5" fill="#F472B6" opacity="0.8"/>
+          <!-- Senyuman -->
+          ${mood === 'excited'
+            ? '<path d="M86 110 Q100 126 114 110 Z" fill="#FBBF24"/>'
+            : '<path d="M86 111 Q100 122 114 111" stroke="#FBBF24" stroke-width="4.5" stroke-linecap="round" fill="none"/>'}
+          <!-- Badan Kecil -->
+          <rect x="66" y="146" width="68" height="36" rx="16" fill="#34D399" stroke="#047857" stroke-width="4"/>
+          <circle cx="100" cy="164" r="11" fill="#FBBF24" stroke="#B45309" stroke-width="2.5"/>
+          <text x="100" y="169" text-anchor="middle" font-size="14" font-weight="bold" fill="#78350F">ج</text>
+        </svg>
+      `;
+    }
+
+    /*************************************************************************
+     * 7. PENGURUSAN NAVIGASI & PEMASA HAD MASA KANAK-KANAK
+     *************************************************************************/
+    let pendingPinAction = null;
+
+    function navigateTo(view, param = null) {
+      playTone('click');
+      appState.currentView = view;
+      appState.viewParam = param;
+
+      const navbar = document.getElementById('topNavbar');
+      if (view === 'splash' || view === 'onboarding' || view === 'roleSelect') {
+        navbar.classList.add('hidden');
+      } else {
+        navbar.classList.remove('hidden');
+        updateNavbarStats();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderCurrentView();
+    }
+
+    function updateNavbarStats() {
+      const stu = getActiveStudent();
+      if (!stu) return;
+      const elStars = document.getElementById('navStars');
+      const elXP = document.getElementById('navXP');
+      const elStreak = document.getElementById('navStreak');
+      const elIcon = document.getElementById('soundIcon');
+      if (elStars) elStars.textContent = stu.stars;
+      if (elXP) elXP.textContent = stu.xp;
+      if (elStreak) elStreak.textContent = stu.streak;
+      if (elIcon) elIcon.textContent = appState.audioMuted ? '🔇' : '🔊';
+    }
+
+    function openPinModal(targetAction) {
+      pendingPinAction = targetAction;
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinError').classList.add('hidden');
+      document.getElementById('pinModalTitle').textContent =
+        targetAction === 'admin' ? 'Pengesahan Panel Admin' : 'Pengesahan Penjaga';
+      document.getElementById('pinModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('pinInput').focus(), 100);
+    }
+
+    function closePinModal() {
+      document.getElementById('pinModal').classList.add('hidden');
+      pendingPinAction = null;
+    }
+
+    function verifyPinSubmit() {
+      const val = document.getElementById('pinInput').value.trim();
+      if (val === appState.parentPin) {
+        playTone('correct');
+        const action = pendingPinAction;
+        closePinModal();
+        if (action === 'parent') navigateTo('parentDashboard');
+        else if (action === 'admin') navigateTo('adminDashboard');
+        else if (action === 'extendTime') {
+          appState.timeLimitMinutes += 30;
+          saveAppState();
+          document.getElementById('timeLimitModal').classList.add('hidden');
+          showToast('Masa pembelajaran ditambah 30 minit! ⏰', 'success');
+        }
+      } else {
+        playTone('wrong');
+        document.getElementById('pinError').classList.remove('hidden');
+      }
+    }
+
+    // Pemasa Sesi Aktif Kanak-Kanak (Semak had masa setiap 10 saat)
+    setInterval(() => {
+      if (['studentDashboard', 'academy', 'writing', 'games', 'quiz'].includes(appState.currentView)) {
+        appState.sessionSecondsToday += 10;
+        const usedMinutes = Math.floor(appState.sessionSecondsToday / 60);
+        if (usedMinutes >= appState.timeLimitMinutes) {
+          document.getElementById('timeLimitModal').classList.remove('hidden');
+        }
+      }
+    }, 10000);
+
+    /*************************************************************************
+     * 8. PENJANA PAPARAN UTAMA (ROUTER)
+     *************************************************************************/
+    function renderCurrentView() {
+      const root = document.getElementById('appRoot');
+      const v = appState.currentView;
+
+      if (v === 'splash') root.innerHTML = renderSplashScreen();
+      else if (v === 'onboarding') root.innerHTML = renderOnboardingScreen();
+      else if (v === 'roleSelect') root.innerHTML = renderRoleSelectScreen();
+      else if (v === 'studentProfileSelect') root.innerHTML = renderStudentProfileScreen();
+      else if (v === 'studentDashboard') root.innerHTML = renderStudentDashboard();
+      else if (v === 'academy') {
+        root.innerHTML = renderAcademyHub(appState.viewParam || 1);
+      }
+      else if (v === 'writing') {
+        root.innerHTML = renderWritingModule();
+        initWritingCanvas();
+      }
+      else if (v === 'games') {
+        root.innerHTML = renderGamesHub(appState.viewParam || null);
+      }
+      else if (v === 'quiz') {
+        root.innerHTML = renderQuizModule();
+      }
+      else if (v === 'rewards') {
+        root.innerHTML = renderRewardsAndAchievements();
+      }
+      else if (v === 'parentDashboard') {
+        root.innerHTML = renderParentDashboard();
+      }
+      else if (v === 'teacherDashboard') {
+        root.innerHTML = renderTeacherDashboard();
+      }
+      else if (v === 'adminDashboard') {
+        root.innerHTML = renderAdminDashboard();
+      }
+    }
+
+    /*************************************************************************
+     * 9. SPLASH SCREEN, ONBOARDING & PEMILIHAN PERANAN
+     *************************************************************************/
+    function renderSplashScreen() {
+      return `
+        <div class="min-h-[88vh] flex flex-col items-center justify-center text-center px-4 animate-pop">
+          <div class="bg-white/90 backdrop-blur-md rounded-[2.5rem] p-8 sm:p-12 max-w-xl w-full shadow-2xl border-4 border-emerald-200 relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-36 h-36 bg-yellow-200/50 rounded-full blur-xl"></div>
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-sky-200/50 rounded-full blur-xl"></div>
+
+            <div class="relative z-10 flex flex-col items-center">
+              ${getJawiBotSVG('w-36 h-36 sm:w-44 sm:h-44', 'excited')}
+
+              <div class="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs sm:text-sm">
+                <span>🇲🇾</span> Aplikasi Pendidikan Jawi Kanak-Kanak
+              </div>
+
+              <h1 class="font-display text-5xl sm:text-6xl font-bold text-emerald-600 mt-3 tracking-tight drop-shadow-sm">
+                Jawi<span class="text-amber-500">Pro</span>
+              </h1>
+
+              <p class="text-lg sm:text-xl font-extrabold text-slate-700 mt-2">
+                "Belajar Jawi, Mudah dan Menyeronokkan!"
+              </p>
+
+              <p class="text-sm text-slate-500 mt-2 max-w-md">
+                Terokai huruf Jawi, belajar membaca dan menulis secara interaktif, bermain 8 permainan seronok, dan kumpul bintang bersama JawiBot!
+              </p>
+
+              <button onclick="speakMalay('Selamat datang ke JawiPro! Belajar Jawi, mudah dan menyeronokkan!'); navigateTo('onboarding')"
+                class="btn-3d btn-green pulse-glow mt-7 w-full sm:w-72 py-4 px-8 rounded-3xl font-display text-xl sm:text-2xl font-bold flex items-center justify-center gap-3">
+                <span>🚀</span> Mula Belajar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOnboardingScreen() {
+      const features = [
+        { icon: '🔤', title: 'Kenali Huruf Jawi', desc: '37 huruf Jawi lengkap dengan sebutan audio dan animasi.', bg: 'bg-emerald-50 border-emerald-200' },
+        { icon: '✍️', title: 'Membaca & Menulis', desc: 'Latihan suku kata, perkataan, ayat dan kanvas menulis digital.', bg: 'bg-sky-50 border-sky-200' },
+        { icon: '🎮', title: 'Bermain Sambil Belajar', desc: '8 permainan interaktif & kuiz pintar yang mencabar minda.', bg: 'bg-amber-50 border-amber-200' },
+        { icon: '🏆', title: 'Kumpul Bintang & Lencana', desc: 'Raih XP, naik tahap dan buka lencana Juara JawiPro!', bg: 'bg-purple-50 border-purple-200' }
+      ];
+
+      return `
+        <div class="min-h-[85vh] flex flex-col items-center justify-center max-w-3xl mx-auto animate-pop">
+          <div class="bg-white rounded-[2.25rem] p-6 sm:p-10 shadow-xl border-4 border-sky-100 w-full">
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left mb-6">
+              ${getJawiBotSVG('w-24 h-24 shrink-0', 'happy')}
+              <div>
+                <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">Hai! Saya JawiBot 🤖</span>
+                <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-800 mt-1">Apa yang boleh anda buat di JawiPro?</h2>
+                <p class="text-sm text-slate-500">Direka khas untuk kanak-kanak berumur 6 hingga 12 tahun di Malaysia.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              ${features.map(f => `
+                <div class="p-4 rounded-2xl border-2 ${f.bg} flex items-start gap-3.5">
+                  <div class="text-3xl bg-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm shrink-0">${f.icon}</div>
+                  <div>
+                    <h3 class="font-display font-bold text-slate-800 text-base">${f.title}</h3>
+                    <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">${f.desc}</p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button onclick="navigateTo('splash')" class="btn-3d btn-white w-full sm:w-auto px-6 py-3 rounded-2xl font-bold text-sm">← Kembali</button>
+              <button onclick="navigateTo('roleSelect')" class="btn-3d btn-green w-full sm:w-auto px-8 py-3.5 rounded-2xl font-display text-lg font-bold">
+                Teruskan →
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRoleSelectScreen() {
+      return `
+        <div class="min-h-[85vh] flex flex-col items-center justify-center max-w-4xl mx-auto animate-pop">
+          <div class="text-center mb-6">
+            ${getJawiBotSVG('w-24 h-24 mx-auto', 'happy')}
+            <h2 class="font-display text-3xl sm:text-4xl font-bold text-slate-800 mt-2">Siapakah Anda?</h2>
+            <p class="text-slate-600 text-sm sm:text-base mt-1">Pilih peranan anda untuk memulakan pengalaman JawiPro</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 w-full">
+            <!-- Murid -->
+            <button onclick="navigateTo('studentProfileSelect')"
+              class="group bg-white hover:bg-emerald-50 border-4 border-emerald-200 hover:border-emerald-400 rounded-3xl p-6 text-center shadow-lg transition transform hover:-translate-y-1">
+              <div class="w-20 h-20 mx-auto rounded-3xl bg-emerald-100 text-5xl flex items-center justify-center group-hover:scale-110 transition">🎒</div>
+              <h3 class="font-display text-2xl font-bold text-emerald-700 mt-4">Saya Murid</h3>
+              <p class="text-xs text-slate-500 mt-1.5">Belajar Jawi, bermain permainan, jawab kuiz & kumpul bintang!</p>
+              <div class="mt-4 py-2 px-4 rounded-xl bg-emerald-500 text-white font-bold text-sm">Masuk Murid →</div>
+            </button>
+
+            <!-- Ibu Bapa -->
+            <button onclick="openPinModal('parent')"
+              class="group bg-white hover:bg-amber-50 border-4 border-amber-200 hover:border-amber-400 rounded-3xl p-6 text-center shadow-lg transition transform hover:-translate-y-1">
+              <div class="w-20 h-20 mx-auto rounded-3xl bg-amber-100 text-5xl flex items-center justify-center group-hover:scale-110 transition">👨‍👩‍👧‍👦</div>
+              <h3 class="font-display text-2xl font-bold text-amber-700 mt-4">Saya Ibu Bapa</h3>
+              <p class="text-xs text-slate-500 mt-1.5">Pantau prestasi anak, urus profil & tetapkan had masa selamat.</p>
+              <div class="mt-4 py-2 px-4 rounded-xl bg-amber-400 text-amber-950 font-bold text-sm">🔒 Ruang Penjaga</div>
+            </button>
+
+            <!-- Guru -->
+            <button onclick="navigateTo('teacherDashboard')"
+              class="group bg-white hover:bg-sky-50 border-4 border-sky-200 hover:border-sky-400 rounded-3xl p-6 text-center shadow-lg transition transform hover:-translate-y-1">
+              <div class="w-20 h-20 mx-auto rounded-3xl bg-sky-100 text-5xl flex items-center justify-center group-hover:scale-110 transition">👩‍🏫</div>
+              <h3 class="font-display text-2xl font-bold text-sky-700 mt-4">Saya Guru</h3>
+              <p class="text-xs text-slate-500 mt-1.5">Semak kemajuan murid kelas, beri tugasan & bina soalan kuiz.</p>
+              <div class="mt-4 py-2 px-4 rounded-xl bg-sky-500 text-white font-bold text-sm">Masuk Guru →</div>
+            </button>
+          </div>
+
+          <!-- Akses Pentadbir & Info Keselamatan -->
+          <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 w-full bg-white/80 px-5 py-3.5 rounded-2xl border border-slate-200 text-xs text-slate-500">
+            <div class="flex items-center gap-2">
+              <span>🛡️</span>
+              <span><b>Zon Selamat Kanak-Kanak:</b> Tiada iklan, tiada sembang terbuka & patuh privasi keluarga.</span>
+            </div>
+            <button onclick="openPinModal('admin')" class="text-slate-600 hover:text-emerald-700 font-bold underline shrink-0">
+              ⚙️ Panel Admin
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    /*************************************************************************
+     * 10. SISTEM PROFIL PELAJAR
+     *************************************************************************/
+    function renderStudentProfileScreen() {
+      const avatars = ['🦁', '🐱', '🐰', '🐼', '🦊', '🐯', '🐸', '🦄'];
+      return `
+        <div class="max-w-3xl mx-auto animate-pop">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-100">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-800">Pilih Profil Murid</h2>
+                <p class="text-xs sm:text-sm text-slate-500">Klik nama anda atau cipta profil baharu untuk menyimpan bintang & XP.</p>
+              </div>
+              <button onclick="navigateTo('roleSelect')" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs font-bold">← Kembali</button>
+            </div>
+
+            <!-- Senarai Profil Sedia Ada -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              ${appState.students.map(s => `
+                <button onclick="selectStudentProfile('${s.id}')"
+                  class="flex items-center gap-4 p-4 rounded-2xl border-2 ${s.id === appState.activeStudentId ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200 bg-slate-50 hover:border-emerald-300'} text-left transition">
+                  <div class="w-16 h-16 rounded-2xl bg-white shadow flex items-center justify-center text-4xl shrink-0">${s.avatar}</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-display text-xl font-bold text-slate-800 truncate">${s.name}</div>
+                    <div class="text-xs font-bold text-emerald-700">${s.stage}</div>
+                    <div class="flex items-center gap-3 mt-1 text-xs font-extrabold text-slate-600">
+                      <span>⭐ ${s.stars}</span>
+                      <span>⚡ ${s.xp} XP</span>
+                      <span>🎖️ Tahap ${computeLevel(s.xp)}</span>
+                    </div>
+                  </div>
+                  <span class="text-emerald-600 font-bold text-lg">→</span>
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- Borang Cipta Profil Baharu -->
+            <div class="bg-sky-50/70 rounded-2xl p-5 border-2 border-sky-200">
+              <h3 class="font-display text-lg font-bold text-sky-900 mb-3">➕ Cipta Profil Murid Baharu</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 mb-1">Nama Panggilan</label>
+                  <input id="newStuName" type="text" placeholder="Contoh: Sara" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-sky-200 focus:border-emerald-400 focus:outline-none text-sm font-bold bg-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 mb-1">Umur & Tahap</label>
+                  <select id="newStuStage" class="w-full px-3 py-2.5 rounded-xl border-2 border-sky-200 focus:border-emerald-400 focus:outline-none text-sm font-bold bg-white">
+                    <option value="6|Tahap 1 (6–7 Tahun)">Tahap 1: Umur 6–7 Tahun</option>
+                    <option value="8|Tahap 2 (8–9 Tahun)" selected>Tahap 2: Umur 8–9 Tahun</option>
+                    <option value="11|Tahap 3 (10–12 Tahun)">Tahap 3: Umur 10–12 Tahun</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 mb-1">Pilih Avatar</label>
+                  <select id="newStuAvatar" class="w-full px-3 py-2.5 rounded-xl border-2 border-sky-200 focus:border-emerald-400 focus:outline-none text-sm font-bold bg-white">
+                    ${avatars.map(a => `<option value="${a}">${a} Avatar Comel</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+              <button onclick="createNewStudentProfile()" class="btn-3d btn-green mt-4 w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-sm">
+                Simpan & Mula Belajar 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectStudentProfile(id) {
+      appState.activeStudentId = id;
+      saveAppState();
+      const stu = getActiveStudent();
+      speakMalay(`Selamat datang kembali, ${stu.name}!`);
+      navigateTo('studentDashboard');
+    }
+
+    function createNewStudentProfile() {
+      const nameInput = document.getElementById('newStuName').value.trim();
+      if (!nameInput) {
+        showToast('Sila masukkan nama panggilan murid dahulu!', 'warn');
+        return;
+      }
+      const [ageStr, stage] = document.getElementById('newStuStage').value.split('|');
+      const avatar = document.getElementById('newStuAvatar').value;
+      const newId = 'stu_' + Date.now();
+      const today = new Date().toISOString().slice(0, 10);
+
+      appState.students.push({
+        id: newId,
+        name: nameInput,
+        avatar,
+        age: parseInt(ageStr, 10),
+        stage,
+        xp: 20,
+        stars: 1,
+        streak: 1,
+        lastActiveDate: today,
+        lastActivityLabel: 'Modul 1: Kenali Huruf Jawi',
+        lastActivityView: 'academy',
+        exploredLetters: [],
+        completedModules: [],
+        gamesPlayed: 0,
+        quizzesTaken: 0,
+        quizHighScores: 0,
+        wordsRead: 0,
+        writingSaved: [],
+        quizHistory: [],
+        dailyMissions: {
+          date: today,
+          lettersCount: 0,
+          gamesCount: 0,
+          quizCount: 0,
+          wordsCount: 0,
+          writingCount: 0,
+          claimed: {}
+        },
+        badges: [],
+        assignedTasks: ['Modul 1: Kenali Huruf Jawi']
+      });
+
+      appState.activeStudentId = newId;
+      saveAppState();
+      playTone('fanfare');
+      showToast(`Profil ${nameInput} berjaya dicipta! 🎉`, 'success');
+      navigateTo('studentDashboard');
+    }
+
+    /*************************************************************************
+     * 11. DASHBOARD UTAMA MURID
+     *************************************************************************/
+    function renderStudentDashboard() {
+      const stu = getActiveStudent();
+      const level = computeLevel(stu.xp);
+      const xpInLevel = stu.xp % 100;
+      const overallProgress = Math.min(100, Math.round(((stu.exploredLetters.length / 37) * 50) + (stu.completedModules.length * 8)));
+
+      const missions = [
+        { key: 'm_letter', title: 'Belajar 5 huruf Jawi', cur: stu.dailyMissions.lettersCount, max: 5, rewardXP: 30, rewardStar: 1 },
+        { key: 'm_game', title: 'Selesaikan 1 permainan Jawi', cur: stu.dailyMissions.gamesCount, max: 1, rewardXP: 35, rewardStar: 2 },
+        { key: 'm_quiz', title: 'Jawab 5 soalan kuiz', cur: stu.dailyMissions.quizCount, max: 5, rewardXP: 40, rewardStar: 2 },
+        { key: 'm_word', title: 'Baca 3 perkataan Jawi', cur: stu.dailyMissions.wordsCount, max: 3, rewardXP: 25, rewardStar: 1 },
+        { key: 'm_write', title: 'Siapkan 1 latihan menulis', cur: stu.dailyMissions.writingCount, max: 1, rewardXP: 35, rewardStar: 2 }
+      ];
+
+      const menuCards = [
+        { title: 'Akademi Jawi', desc: '6 modul lengkap Jawi', icon: '🕌', color: 'from-emerald-400 to-teal-500', action: "navigateTo('academy', 1)" },
+        { title: 'Kenali Huruf', desc: '37 huruf & audio', icon: '🔤', color: 'from-amber-400 to-orange-500', action: "navigateTo('academy', 1)" },
+        { title: 'Belajar Membaca', desc: 'Suku kata, perkataan & ayat', icon: '📖', color: 'from-sky-400 to-blue-500', action: "navigateTo('academy', 4)" },
+        { title: 'Belajar Menulis', desc: 'Kanvas tulis jari interaktif', icon: '✍️', color: 'from-purple-400 to-indigo-500', action: "navigateTo('writing')" },
+        { title: 'Permainan Jawi', desc: '8 permainan mini seronok', icon: '🎮', color: 'from-pink-400 to-rose-500', action: "navigateTo('games')" },
+        { title: 'Kuiz Pintar', desc: 'Uji minda & kumpul bintang', icon: '🧠', color: 'from-teal-400 to-cyan-600', action: "navigateTo('quiz')" },
+        { title: 'Koleksi Ganjaran', desc: 'Lencana & trofi juara', icon: '🏅', color: 'from-yellow-400 to-amber-500', action: "navigateTo('rewards')" },
+        { title: 'Pencapaian Saya', desc: 'Rekod kemajuan & hasil tulis', icon: '📊', color: 'from-lime-500 to-emerald-600', action: "navigateTo('rewards')" }
+      ];
+
+      return `
+        <div class="space-y-6 animate-pop">
+          <!-- Kad Ucapan Selamat Datang & Profil -->
+          <div class="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 rounded-[2rem] p-5 sm:p-7 text-white shadow-xl relative overflow-hidden">
+            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
+              <div class="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
+                <div class="w-20 h-20 rounded-3xl bg-white/25 backdrop-blur-sm border-2 border-white/60 flex items-center justify-center text-5xl shadow-inner">
+                  ${stu.avatar}
+                </div>
+                <div>
+                  <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-white/20 text-xs font-extrabold">
+                    <span>🎖️ Tahap ${level}</span> • <span>${stu.stage}</span>
+                  </div>
+                  <h1 class="font-display text-2xl sm:text-3xl font-bold mt-1">Assalamualaikum, ${stu.name}! 👋</h1>
+                  <p class="text-xs sm:text-sm text-emerald-50 mt-0.5">Jom sambung pengembaraan Jawi hari ini bersama JawiBot!</p>
+
+                  <!-- Progress Bar Tahap -->
+                  <div class="mt-3 max-w-md">
+                    <div class="flex justify-between text-[11px] font-bold mb-1">
+                      <span>Kemajuan Tahap ${level}</span>
+                      <span>${xpInLevel} / 100 XP</span>
+                    </div>
+                    <div class="w-full h-3 bg-black/20 rounded-full overflow-hidden p-0.5">
+                      <div class="h-full bg-amber-300 rounded-full transition-all duration-500" style="width: ${xpInLevel}%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kad Statistik Murid -->
+              <div class="grid grid-cols-3 gap-2.5 w-full md:w-auto shrink-0">
+                <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/30">
+                  <div class="text-2xl">⭐</div>
+                  <div class="font-display text-xl font-bold">${stu.stars}</div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider opacity-90">Bintang</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/30">
+                  <div class="text-2xl">⚡</div>
+                  <div class="font-display text-xl font-bold">${stu.xp}</div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider opacity-90">Jumlah XP</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/30">
+                  <div class="text-2xl">🔥</div>
+                  <div class="font-display text-xl font-bold">${stu.streak}</div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider opacity-90">Hari Streak</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bar Sambung Pembelajaran & Tugasan Guru -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 bg-white rounded-3xl p-5 border-2 border-amber-200 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                ${getJawiBotSVG('w-16 h-16 shrink-0', 'happy')}
+                <div>
+                  <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-600">Sambung Pembelajaran Terakhir</span>
+                  <h3 class="font-display text-lg sm:text-xl font-bold text-slate-800">${stu.lastActivityLabel}</h3>
+                  <div class="flex items-center gap-2 mt-1">
+                    <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500 rounded-full" style="width: ${overallProgress}%"></div>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-700">${overallProgress}% Selesai</span>
+                  </div>
+                </div>
+              </div>
+              <button onclick="navigateTo('academy', 1)" class="btn-3d btn-yellow w-full sm:w-auto px-5 py-3 rounded-2xl font-bold text-sm shrink-0">
+                Teruskan Belajar ▶
+              </button>
+            </div>
+
+            <!-- Tugasan Guru -->
+            <div class="bg-sky-50 rounded-3xl p-5 border-2 border-sky-200 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-display text-base font-bold text-sky-900">📌 Tugasan Cikgu</h3>
+                <span class="px-2 py-0.5 rounded-full bg-sky-200 text-sky-900 text-[10px] font-extrabold">${stu.assignedTasks.length} Aktif</span>
+              </div>
+              <ul class="space-y-1.5 text-xs font-bold text-sky-800">
+                ${stu.assignedTasks.map(t => `<li class="bg-white/80 px-3 py-2 rounded-xl border border-sky-100 flex items-center gap-2"><span>✅</span><span>${t}</span></li>`).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <!-- 8 Menu Utama Murid -->
+          <div>
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <span>🧭</span> Menu Utama Pembelajaran
+            </h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+              ${menuCards.map(c => `
+                <button onclick="${c.action}"
+                  class="group bg-white hover:bg-slate-50 rounded-3xl p-4 sm:p-5 border-2 border-slate-100 hover:border-emerald-300 shadow-md hover:shadow-xl transition text-left flex flex-col justify-between">
+                  <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${c.color} text-white text-2xl sm:text-3xl flex items-center justify-center shadow-sm group-hover:scale-110 transition">
+                    ${c.icon}
+                  </div>
+                  <div class="mt-3">
+                    <h3 class="font-display text-base sm:text-lg font-bold text-slate-800 leading-tight">${c.title}</h3>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-1">${c.desc}</p>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Misi Harian -->
+          <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-emerald-100 shadow-md">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="font-display text-xl font-bold text-slate-800 flex items-center gap-2">🎯 Misi Harian Anda</h2>
+                <p class="text-xs text-slate-500">Lengkapkan misi setiap hari untuk tuntut bonus XP & Bintang!</p>
+              </div>
+              <button onclick="navigateTo('studentProfileSelect')" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                👤 Tukar Murid
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${missions.map(m => {
+                const done = m.cur >= m.max;
+                const claimed = !!stu.dailyMissions.claimed[m.key];
+                const pct = Math.min(100, Math.round((m.cur / m.max) * 100));
+                return `
+                  <div class="p-4 rounded-2xl border-2 ${done ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100 bg-slate-50'} flex flex-col justify-between gap-2.5">
+                    <div>
+                      <div class="flex justify-between items-start gap-2">
+                        <span class="font-bold text-sm text-slate-800">${m.title}</span>
+                        <span class="text-[11px] font-extrabold px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 shrink-0">+${m.rewardXP} XP ⭐${m.rewardStar}</span>
+                      </div>
+                      <div class="mt-2 flex items-center gap-2">
+                        <div class="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div class="h-full bg-emerald-500 rounded-full transition-all" style="width:${pct}%"></div>
+                        </div>
+                        <span class="text-xs font-extrabold text-slate-600">${Math.min(m.cur, m.max)}/${m.max}</span>
+                      </div>
+                    </div>
+                    ${claimed
+                      ? `<div class="text-center py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-extrabold">✅ Ganjaran Dituntut</div>`
+                      : done
+                        ? `<button onclick="claimDailyMission('${m.key}', ${m.rewardXP}, ${m.rewardStar})" class="btn-3d btn-yellow py-2 rounded-xl font-bold text-xs">🎁 Tuntut Ganjaran!</button>`
+                        : `<div class="text-[11px] text-slate-400 font-bold">Teruskan usaha!</div>`
+                    }
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function claimDailyMission(key, xp, stars) {
+      const stu = getActiveStudent();
+      if (stu.dailyMissions.claimed[key]) return;
+      stu.dailyMissions.claimed[key] = true;
+      playTone('fanfare');
+      launchConfetti();
+      awardProgress({ xp, stars, reason: 'Misi Harian Selesai' });
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 12. MODUL AKADEMI JAWI (6 MODUL LENGKAP)
+     *************************************************************************/
+    let selectedLetterIdx = 0;
+    let selectedWordCat = 'Semua';
+    let wordBuilderIdx = 0;
+    let wordBuilderUserChars = [];
+    let storyIdx = 0;
+    let showStoryRumi = true;
+
+    function renderAcademyHub(activeTab = 1) {
+      const tabs = [
+        { id: 1, title: '1. Kenali Huruf' },
+        { id: 2, title: '2. Bentuk & Sambung' },
+        { id: 3, title: '3. Suku Kata' },
+        { id: 4, title: '4. Baca Perkataan' },
+        { id: 5, title: '5. Bina Perkataan' },
+        { id: 6, title: '6. Baca Ayat' }
+      ];
+
+      let contentHtml = '';
+      if (activeTab === 1) contentHtml = renderModule1Letters();
+      else if (activeTab === 2) contentHtml = renderModule2Positions();
+      else if (activeTab === 3) contentHtml = renderModule3Syllables();
+      else if (activeTab === 4) contentHtml = renderModule4Words();
+      else if (activeTab === 5) contentHtml = renderModule5WordBuilder();
+      else if (activeTab === 6) contentHtml = renderModule6Sentences();
+
+      return `
+        <div class="space-y-5 animate-pop">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold text-emerald-800">🕌 Akademi Jawi</h1>
+              <p class="text-xs sm:text-sm text-slate-600">Pilih modul pembelajaran berperingkat mengikut panduan ejaan Jawi Malaysia.</p>
+            </div>
+            <button onclick="navigateTo('studentDashboard')" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold">🏠 Dashboard</button>
+          </div>
+
+          <!-- Navigasi 6 Modul -->
+          <div class="flex overflow-x-auto gap-2 pb-2">
+            ${tabs.map(t => `
+              <button onclick="navigateTo('academy', ${t.id})"
+                class="px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${activeTab === t.id ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50'}">
+                ${t.title}
+              </button>
+            `).join('')}
+          </div>
+
+          <div>${contentHtml}</div>
+        </div>
+      `;
+    }
+
+    // MODUL 1: KENALI HURUF JAWI
+    function renderModule1Letters() {
+      const L = JAWI_LETTERS[selectedLetterIdx];
+      const stu = getActiveStudent();
+
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Paparan Terperinci Huruf Dipilih -->
+          <div class="lg:col-span-5 bg-white rounded-3xl p-6 border-4 border-emerald-200 shadow-lg flex flex-col items-center text-center">
+            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">
+              Huruf ${selectedLetterIdx + 1} daripada ${JAWI_LETTERS.length}
+            </span>
+
+            <div id="letterBigCard" class="mt-4 w-40 h-40 rounded-3xl bg-gradient-to-br from-emerald-50 to-sky-50 border-4 border-emerald-300 flex items-center justify-center shadow-inner animate-letter">
+              <span class="jawi-text text-8xl font-bold text-emerald-700">${L.char}</span>
+            </div>
+
+            <h2 class="font-display text-3xl font-bold text-slate-800 mt-4">${L.name}</h2>
+            <p class="text-sm font-bold text-emerald-600">Sebutan: "${L.pron}" • Bunyi: [${L.sound}]</p>
+            <p class="text-xs text-slate-600 mt-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">${L.desc}</p>
+
+            <!-- Contoh Perkataan -->
+            <div class="mt-4 w-full bg-amber-50 rounded-2xl p-4 border-2 border-amber-200 flex items-center justify-between">
+              <div class="text-left">
+                <span class="text-[10px] font-extrabold uppercase text-amber-700">Contoh Perkataan</span>
+                <div class="font-display text-lg font-bold text-slate-800">${L.exampleRumi}</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-3xl">${L.icon}</span>
+                <span class="jawi-text text-3xl font-bold text-emerald-800">${L.exampleJawi}</span>
+              </div>
+            </div>
+
+            <!-- Butang Audio & Selesai -->
+            <div class="grid grid-cols-2 gap-3 w-full mt-5">
+              <button onclick="speakMalay('Huruf ${L.name}. Contoh perkataan, ${L.exampleRumi}.')" class="btn-3d btn-blue py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2">
+                <span>🔊</span> Dengar Sebutan
+              </button>
+              <button onclick="markLetterLearned('${L.char}', '${L.name}')" class="btn-3d btn-green py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2">
+                <span>⭐</span> Faham (+15 XP)
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid 37 Huruf Jawi (RTL) -->
+          <div class="lg:col-span-7 bg-white rounded-3xl p-5 border-2 border-slate-100 shadow-md">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-display text-lg font-bold text-slate-800">Klik Mana-Mana Huruf Jawi (Kanan ke Kiri)</h3>
+              <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl">
+                Dikuasai: ${stu.exploredLetters.length}/${JAWI_LETTERS.length}
+              </span>
+            </div>
+            <div dir="rtl" class="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
+              ${JAWI_LETTERS.map((item, idx) => {
+                const isSelected = idx === selectedLetterIdx;
+                const isLearned = stu.exploredLetters.includes(item.char);
+                return `
+                  <button onclick="selectLetter(${idx})"
+                    class="relative p-2.5 rounded-2xl border-2 transition flex flex-col items-center justify-center ${isSelected ? 'bg-emerald-500 text-white border-emerald-700 scale-105 shadow-md' : isLearned ? 'bg-emerald-50/80 border-emerald-300 text-slate-800' : 'bg-slate-50 hover:bg-amber-50 border-slate-200 text-slate-800'}">
+                    ${isLearned ? '<span class="absolute top-1 left-1 text-[10px]">✅</span>' : ''}
+                    <span class="jawi-text text-3xl font-bold leading-tight">${item.char}</span>
+                    <span class="text-[10px] font-extrabold mt-0.5 ${isSelected ? 'text-emerald-100' : 'text-slate-500'}">${item.name}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectLetter(idx) {
+      selectedLetterIdx = idx;
+      const L = JAWI_LETTERS[idx];
+      speakMalay(`Huruf ${L.name}`);
+      renderCurrentView();
+    }
+
+    function markLetterLearned(char, name) {
+      const stu = getActiveStudent();
+      stu.lastActivityLabel = `Modul 1: Huruf ${name}`;
+      if (!stu.exploredLetters.includes(char)) {
+        stu.exploredLetters.push(char);
+        if (stu.exploredLetters.length >= 10 && !stu.completedModules.includes('m1')) {
+          stu.completedModules.push('m1');
+        }
+        playTone('correct');
+        awardProgress({ xp: 15, stars: 1, reason: `Menguasai huruf ${name}`, missionType: 'letter' });
+      } else {
+        playTone('click');
+        showToast(`Anda sudah menguasai huruf ${name}! Hebat!`, 'info');
+      }
+      renderCurrentView();
+    }
+
+    // MODUL 2: BENTUK DAN KEDUDUKAN HURUF
+    function renderModule2Positions() {
+      return `
+        <div class="space-y-5">
+          <!-- Kad Penerangan Huruf Bersambung vs Huruf Pemutus -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-emerald-50 rounded-3xl p-5 border-2 border-emerald-200">
+              <h3 class="font-display text-lg font-bold text-emerald-900 flex items-center gap-2">🤝 Huruf Boleh Bersambung (29 Huruf)</h3>
+              <p class="text-xs text-emerald-800 mt-1">Boleh bersambung dengan huruf sebelum dan selepasnya (Contoh: <b>بـ ـبـ ـب</b>).</p>
+              <div dir="rtl" class="mt-3 flex flex-wrap gap-1.5">
+                ${JAWI_LETTERS.filter(l => l.connector).map(l => `<span class="jawi-text px-2.5 py-1 bg-white rounded-xl border border-emerald-200 text-lg font-bold text-emerald-800">${l.char}</span>`).join('')}
+              </div>
+            </div>
+
+            <div class="bg-amber-50 rounded-3xl p-5 border-2 border-amber-200">
+              <h3 class="font-display text-lg font-bold text-amber-900 flex items-center gap-2">✋ Huruf Pemutus / Tidak Bersambung Selepasnya (8 Huruf)</h3>
+              <p class="text-xs text-amber-800 mt-1">Hanya boleh bersambung dengan huruf sebelumnya, tetapi <b>tidak</b> bersambung dengan huruf selepasnya.</p>
+              <div dir="rtl" class="mt-3 flex flex-wrap gap-2">
+                ${JAWI_LETTERS.filter(l => !l.connector).map(l => `<span class="jawi-text px-3 py-1 bg-white rounded-xl border-2 border-amber-300 text-xl font-bold text-amber-900">${l.char} <small class="font-sans text-[10px]">(${l.name})</small></span>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Jadual Bentuk Tunggal, Awal, Tengah, Akhir -->
+          <div class="bg-white rounded-3xl p-5 border-2 border-slate-100 shadow-md overflow-x-auto">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-display text-lg font-bold text-slate-800">Jadual Kedudukan Huruf Jawi</h3>
+              <button onclick="completeAcademyModule('m2', 'Modul 2: Bentuk & Kedudukan Huruf')" class="btn-3d btn-green px-4 py-2 rounded-xl text-xs font-bold">
+                ✅ Tandai Faham (+25 XP)
+              </button>
+            </div>
+            <table class="w-full text-center border-collapse">
+              <thead>
+                <tr class="bg-emerald-600 text-white text-xs sm:text-sm">
+                  <th class="p-3 rounded-tl-2xl">Nama Huruf</th>
+                  <th class="p-3">Tunggal</th>
+                  <th class="p-3">Awal</th>
+                  <th class="p-3">Tengah</th>
+                  <th class="p-3">Akhir</th>
+                  <th class="p-3 rounded-tr-2xl">Status Sambungan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-sm">
+                ${JAWI_LETTERS.slice(0, 20).map(l => `
+                  <tr class="hover:bg-emerald-50/40">
+                    <td class="p-2.5 font-bold text-slate-700">${l.name}</td>
+                    <td class="p-2.5 jawi-text text-2xl font-bold text-slate-900">${l.char}</td>
+                    <td class="p-2.5 jawi-text text-2xl font-bold text-emerald-700">${l.initial}</td>
+                    <td class="p-2.5 jawi-text text-2xl font-bold text-sky-700">${l.medial}</td>
+                    <td class="p-2.5 jawi-text text-2xl font-bold text-amber-700">${l.final}</td>
+                    <td class="p-2.5">
+                      ${l.connector
+                        ? '<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">Bersambung</span>'
+                        : '<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Pemutus</span>'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // MODUL 3: SUKU KATA JAWI
+    function renderModule3Syllables() {
+      return `
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-sky-100 shadow-md">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div>
+              <h3 class="font-display text-xl font-bold text-slate-800">🧩 Gabungan Huruf & Suku Kata Jawi</h3>
+              <p class="text-xs text-slate-500">Klik mana-mana kad suku kata untuk mendengar sebutan dan melihat contoh perkataan.</p>
+            </div>
+            <button onclick="completeAcademyModule('m3', 'Modul 3: Suku Kata Jawi')" class="btn-3d btn-green px-4 py-2.5 rounded-xl text-xs font-bold shrink-0">
+              ⭐ Selesai Modul (+25 XP)
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            ${SUKU_KATA_LIST.map(s => `
+              <button onclick="speakMalay('${s.rumi}. Contoh: ${s.contoh.split('(')[1].replace(')', '')}')"
+                class="bg-gradient-to-b from-sky-50 to-white hover:from-amber-50 hover:to-white border-2 border-sky-200 hover:border-amber-300 rounded-2xl p-3.5 text-center shadow-sm transition active:scale-95">
+                <div class="text-[11px] font-bold text-slate-400">${s.konsonan} + ${s.vokal}</div>
+                <div class="jawi-text text-4xl font-bold text-emerald-700 my-1">${s.gabung}</div>
+                <div class="font-display text-base font-bold text-sky-800 uppercase">${s.rumi}</div>
+                <div class="text-[11px] text-slate-500 mt-1">${s.contoh}</div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // MODUL 4: MEMBACA PERKATAAN
+    function renderModule4Words() {
+      const categories = ['Semua', 'Haiwan', 'Buah-buahan', 'Anggota Badan', 'Keluarga', 'Benda di Rumah', 'Benda di Sekolah'];
+      const filtered = selectedWordCat === 'Semua'
+        ? appState.customWords
+        : appState.customWords.filter(w => w.cat === selectedWordCat);
+
+      return `
+        <div class="space-y-4">
+          <div class="bg-white rounded-3xl p-5 border-2 border-emerald-100 shadow-md">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="font-display text-xl font-bold text-slate-800">📖 Perbendaharaan Kata Jawi</h3>
+                <p class="text-xs text-slate-500">Klik kad perkataan untuk mendengar bacaan dan menambah rekod bacaan anda.</p>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${categories.map(c => `
+                  <button onclick="selectedWordCat='${c}'; renderCurrentView()"
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedWordCat === c ? 'bg-amber-400 text-amber-950 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    ${c}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
+              ${filtered.map(w => `
+                <button onclick="readWordCard('${w.rumi}')"
+                  class="bg-emerald-50/50 hover:bg-emerald-100/70 border-2 border-emerald-200 rounded-2xl p-4 text-center transition group">
+                  <div class="text-4xl group-hover:scale-110 transition">${w.icon}</div>
+                  <div class="jawi-text text-3xl font-bold text-emerald-800 mt-2">${w.jawi}</div>
+                  <div class="font-display text-base font-bold text-slate-800 mt-1">${w.rumi}</div>
+                  <span class="inline-block mt-1 px-2 py-0.5 rounded-full bg-white text-[10px] font-bold text-slate-500">${w.cat}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function readWordCard(rumi) {
+      speakMalay(rumi);
+      const stu = getActiveStudent();
+      stu.wordsRead += 1;
+      stu.dailyMissions.wordsCount += 1;
+      checkAndUnlockBadges(stu);
+      saveAppState();
+    }
+
+    // MODUL 5: MEMBINA PERKATAAN
+    function renderModule5WordBuilder() {
+      const targetWord = appState.customWords[wordBuilderIdx % appState.customWords.length];
+      // Kocok huruf secara konsisten
+      const pool = [...targetWord.letters].sort((a, b) => a.localeCompare(b));
+
+      return `
+        <div class="bg-white rounded-3xl p-6 border-4 border-amber-200 shadow-lg max-w-2xl mx-auto text-center">
+          <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">Latihan Bina Perkataan Jawi</span>
+          <div class="text-5xl mt-3">${targetWord.icon}</div>
+          <h3 class="font-display text-2xl font-bold text-slate-800 mt-2">Eja perkataan: <span class="text-emerald-600">${targetWord.rumi}</span></h3>
+          <p class="text-xs text-slate-500 mt-1">Klik huruf di bawah mengikut susunan dari <b>kanan ke kiri</b>.</p>
+
+          <!-- Kotak Jawapan Murid (RTL) -->
+          <div dir="rtl" class="mt-5 min-h-[72px] p-3 rounded-2xl bg-emerald-50 border-2 border-dashed border-emerald-400 flex items-center justify-center gap-2 flex-wrap">
+            ${wordBuilderUserChars.length === 0
+              ? '<span class="text-xs font-sans text-emerald-600 font-bold">Klik kepingan huruf di bawah...</span>'
+              : wordBuilderUserChars.map((ch, i) => `
+                <button onclick="removeBuilderChar(${i})" class="jawi-text text-3xl font-bold px-4 py-2 bg-white rounded-xl border-2 border-emerald-400 text-emerald-800 shadow-sm">
+                  ${ch}
+                </button>
+              `).join('')}
+          </div>
+
+          <!-- Pilihan Kepingan Huruf -->
+          <div dir="rtl" class="mt-5 flex items-center justify-center gap-2.5 flex-wrap">
+            ${pool.map(ch => `
+              <button onclick="addBuilderChar('${ch}')" class="btn-3d btn-white jawi-text text-3xl font-bold w-14 h-14 rounded-2xl flex items-center justify-center">
+                ${ch}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="flex flex-wrap justify-center gap-3 mt-6">
+            <button onclick="wordBuilderUserChars=[]; renderCurrentView()" class="btn-3d btn-white px-5 py-2.5 rounded-xl text-xs font-bold">🔄 Kosongkan</button>
+            <button onclick="checkWordBuilderAnswer()" class="btn-3d btn-green px-6 py-2.5 rounded-xl text-sm font-bold">✅ Semak Jawapan</button>
+            <button onclick="wordBuilderIdx++; wordBuilderUserChars=[]; renderCurrentView()" class="btn-3d btn-blue px-5 py-2.5 rounded-xl text-xs font-bold">Seterusnya →</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function addBuilderChar(ch) {
+      playTone('click');
+      wordBuilderUserChars.push(ch);
+      renderCurrentView();
+    }
+
+    function removeBuilderChar(idx) {
+      playTone('click');
+      wordBuilderUserChars.splice(idx, 1);
+      renderCurrentView();
+    }
+
+    function checkWordBuilderAnswer() {
+      const targetWord = appState.customWords[wordBuilderIdx % appState.customWords.length];
+      if (wordBuilderUserChars.join('') === targetWord.letters.join('')) {
+        playTone('correct');
+        launchConfetti();
+        speakMalay(`Tahniah! Ejaan ${targetWord.rumi} sangat tepat!`);
+        awardProgress({ xp: 25, stars: 1, reason: `Berjaya mengeja ${targetWord.rumi}`, missionType: 'word' });
+        wordBuilderIdx++;
+        wordBuilderUserChars = [];
+        renderCurrentView();
+      } else {
+        playTone('wrong');
+        showToast('Belum tepat lagi! Cuba susun huruf dari kanan ke kiri.', 'warn');
+      }
+    }
+
+    // MODUL 6: MEMBACA AYAT JAWI
+    function renderModule6Sentences() {
+      const story = READING_STORIES[storyIdx % READING_STORIES.length];
+      return `
+        <div class="bg-white rounded-3xl p-6 border-2 border-emerald-100 shadow-md max-w-3xl mx-auto">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div class="flex gap-2">
+              ${READING_STORIES.map((st, idx) => `
+                <button onclick="storyIdx=${idx}; renderCurrentView()"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold ${storyIdx === idx ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}">
+                  ${st.type}
+                </button>
+              `).join('')}
+            </div>
+            <button onclick="showStoryRumi=!showStoryRumi; renderCurrentView()" class="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 text-xs font-bold">
+              ${showStoryRumi ? '🙈 Sembunyi Rumi' : '👁️ Papar Rumi'}
+            </button>
+          </div>
+
+          <div class="bg-emerald-50/70 rounded-2xl p-5 border-2 border-emerald-200 text-right">
+            <h3 class="jawi-text text-2xl sm:text-3xl font-bold text-emerald-900">${story.titleJawi}</h3>
+            ${showStoryRumi ? `<p class="text-xs font-bold text-emerald-700 text-left mt-1">${story.titleRumi}</p>` : ''}
+
+            <div class="mt-4 space-y-3">
+              ${story.lines.map(line => `
+                <div class="bg-white p-3.5 rounded-2xl border border-emerald-100 flex flex-col gap-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <button onclick="speakMalay('${line.rumi}')" class="p-2 rounded-xl bg-sky-100 text-sky-700 text-xs font-bold shrink-0">🔊 Baca</button>
+                    <p class="jawi-text text-xl sm:text-2xl font-bold text-slate-800">${line.jawi}</p>
+                  </div>
+                  ${showStoryRumi ? `<p class="text-xs text-slate-500 text-left">${line.rumi}</p>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Soalan Pemahaman -->
+          <div class="mt-5 p-4 rounded-2xl bg-sky-50 border-2 border-sky-200">
+            <h4 class="font-display text-base font-bold text-sky-900">❓ Soalan Pemahaman: ${story.question}</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-3">
+              ${story.options.map((opt, idx) => `
+                <button onclick="answerStoryComprehension(${idx}, ${story.answer})"
+                  class="btn-3d btn-white py-2.5 px-3 rounded-xl text-xs font-bold hover:border-emerald-400">
+                  ${opt}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function answerStoryComprehension(chosen, correct) {
+      if (chosen === correct) {
+        playTone('correct');
+        launchConfetti();
+        const stu = getActiveStudent();
+        stu.wordsRead += 3;
+        completeAcademyModule('m6', 'Modul 6: Membaca Ayat Jawi');
+      } else {
+        playTone('wrong');
+        showToast('Cuba baca semula petikan di atas dengan teliti!', 'warn');
+      }
+    }
+
+    function completeAcademyModule(modId, label) {
+      const stu = getActiveStudent();
+      stu.lastActivityLabel = label;
+      if (!stu.completedModules.includes(modId)) {
+        stu.completedModules.push(modId);
+        playTone('fanfare');
+        launchConfetti();
+        awardProgress({ xp: 30, stars: 2, reason: `${label} Selesai`, missionType: 'word' });
+      } else {
+        playTone('correct');
+        showToast(`${label} telah diselesaikan sebelum ini!`, 'info');
+      }
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 13. MODUL BELAJAR MENULIS JAWI (KANVAS DIGITAL + PENILAIAN JUJUR)
+     *************************************************************************/
+    let currentWriteIdx = 0;
+    let brushColor = '#059669';
+    let brushSize = 10;
+    let isDrawing = false;
+    let userStrokePoints = 0;
+
+    function renderWritingModule() {
+      const prompt = WRITING_PROMPTS[currentWriteIdx % WRITING_PROMPTS.length];
+      const stu = getActiveStudent();
+
+      return `
+        <div class="space-y-5 animate-pop">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold text-purple-800">✍️ Belajar Menulis Jawi</h1>
+              <p class="text-xs sm:text-sm text-slate-600">Ikut garisan panduan dari <b>kanan ke kiri</b> menggunakan jari, stylus atau tetikus.</p>
+            </div>
+            <button onclick="navigateTo('studentDashboard')" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold">🏠 Dashboard</button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- Kawalan & Arahan Menulis -->
+            <div class="lg:col-span-4 bg-white rounded-3xl p-5 border-2 border-purple-100 shadow-md flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-extrabold">${prompt.category}</span>
+                  <span class="text-xs font-bold text-slate-400">${currentWriteIdx + 1} / ${WRITING_PROMPTS.length}</span>
+                </div>
+
+                <div class="mt-4 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-center">
+                  <div class="text-xs font-bold text-emerald-700">Contoh Tulisan:</div>
+                  <div class="jawi-text text-6xl font-bold text-emerald-800 my-2">${prompt.jawi}</div>
+                  <div class="font-display text-base font-bold text-slate-800">${prompt.rumi}</div>
+                </div>
+
+                <div class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                  <b>💡 Panduan Arah:</b> ${prompt.hint}
+                </div>
+
+                <!-- Pilihan Warna & Saiz Berus -->
+                <div class="mt-4">
+                  <label class="block text-xs font-bold text-slate-600 mb-1.5">Warna Dakwat & Saiz Berus</label>
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex gap-2">
+                      ${['#059669', '#0284C7', '#D97706', '#7C3AED', '#1E293B'].map(c => `
+                        <button onclick="brushColor='${c}'; renderCurrentView()"
+                          class="w-8 h-8 rounded-full border-2 ${brushColor === c ? 'scale-110 border-slate-900' : 'border-white shadow'}"
+                          style="background:${c}"></button>
+                      `).join('')}
+                    </div>
+                    <select onchange="brushSize=parseInt(this.value)" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold">
+                      <option value="7">Halus</option>
+                      <option value="11" selected>Sederhana</option>
+                      <option value="16">Tebal</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Galeri Ringkas Hasil Simpanan -->
+              <div class="mt-5 pt-4 border-t border-slate-100">
+                <div class="text-xs font-bold text-slate-600 mb-2">📁 Hasil Latihan Disimpan: <b>${stu.writingSaved.length}</b></div>
+                <button onclick="speakMalay('${prompt.rumi}. ${prompt.hint}')" class="btn-3d btn-blue w-full py-2.5 rounded-xl text-xs font-bold">
+                  🔊 Dengar Panduan Suara
+                </button>
+              </div>
+            </div>
+
+            <!-- Ruang Kanvas Menulis -->
+            <div class="lg:col-span-8 bg-white rounded-3xl p-4 sm:p-5 border-4 border-emerald-200 shadow-lg flex flex-col">
+              <div class="relative w-full h-72 sm:h-80 rounded-2xl border-2 border-slate-200 overflow-hidden bg-white">
+                <canvas id="writingCanvas" class="w-full h-full block"></canvas>
+              </div>
+
+              <!-- Maklum Balas Penilaian Tulisan -->
+              <div id="writingFeedbackBox" class="hidden mt-3 p-3.5 rounded-2xl bg-sky-50 border-2 border-sky-200 text-xs sm:text-sm font-bold text-sky-900"></div>
+
+              <!-- Butang Kawalan Kanvas -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
+                <button onclick="clearWritingCanvas()" class="btn-3d btn-white py-3 rounded-2xl text-xs sm:text-sm font-bold">🧹 Padam</button>
+                <button onclick="evaluateWritingCanvas()" class="btn-3d btn-yellow py-3 rounded-2xl text-xs sm:text-sm font-bold">🔍 Semak Tulisan</button>
+                <button onclick="saveWritingWork()" class="btn-3d btn-green py-3 rounded-2xl text-xs sm:text-sm font-bold">💾 Simpan Hasil</button>
+                <button onclick="currentWriteIdx++; renderCurrentView()" class="btn-3d btn-blue py-3 rounded-2xl text-xs sm:text-sm font-bold">Seterusnya →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function initWritingCanvas() {
+      const canvas = document.getElementById('writingCanvas');
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      userStrokePoints = 0;
+
+      drawWritingGuidelines(canvas);
+
+      const getPos = (e) => {
+        const r = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - r.left, y: clientY - r.top };
+      };
+
+      const startDraw = (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        const ctx = canvas.getContext('2d');
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+      };
+
+      const moveDraw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const ctx = canvas.getContext('2d');
+        const p = getPos(e);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = brushSize;
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        userStrokePoints++;
+      };
+
+      const endDraw = () => {
+        isDrawing = false;
+      };
+
+      canvas.onmousedown = startDraw;
+      canvas.onmousemove = moveDraw;
+      window.onmouseup = endDraw;
+
+      canvas.ontouchstart = startDraw;
+      canvas.ontouchmove = moveDraw;
+      canvas.ontouchend = endDraw;
+    }
+
+    function drawWritingGuidelines(canvas) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const prompt = WRITING_PROMPTS[currentWriteIdx % WRITING_PROMPTS.length];
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Garisan Panduan Buku Latihan Jawi
+      ctx.save();
+      ctx.setLineDash([8, 6]);
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 1.5;
+      [h * 0.25, h * 0.5, h * 0.75].forEach(y => {
+        ctx.beginPath();
+        ctx.moveTo(16, y);
+        ctx.lineTo(w - 16, y);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // Garis Asas Utama
+      ctx.strokeStyle = '#93C5FD';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(16, h * 0.65);
+      ctx.lineTo(w - 16, h * 0.65);
+      ctx.stroke();
+
+      // Bayangan Huruf / Perkataan Panduan (Untuk Surihan)
+      ctx.save();
+      ctx.font = `bold ${Math.min(130, h * 0.45)}px "Noto Naskh Arabic", serif`;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.16)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(prompt.jawi, w / 2, h * 0.52);
+
+      // Penunjuk Arah Kanan ke Kiri
+      ctx.font = 'bold 12px Nunito, sans-serif';
+      ctx.fillStyle = '#059669';
+      ctx.fillText('← Mula menulis dari kanan ke kiri', w - 125, 24);
+      ctx.restore();
+    }
+
+    function clearWritingCanvas() {
+      playTone('click');
+      const canvas = document.getElementById('writingCanvas');
+      if (canvas) {
+        userStrokePoints = 0;
+        drawWritingGuidelines(canvas);
+        const fb = document.getElementById('writingFeedbackBox');
+        if (fb) fb.classList.add('hidden');
+      }
+    }
+
+    // Penilaian Jujur & Telus berdasarkan litupan piksel lakaran sebenar berbanding templat panduan
+    function evaluateWritingCanvas() {
+      const canvas = document.getElementById('writingCanvas');
+      const fb = document.getElementById('writingFeedbackBox');
+      if (!canvas || !fb) return;
+
+      if (userStrokePoints < 12) {
+        playTone('wrong');
+        fb.classList.remove('hidden');
+        fb.className = 'mt-3 p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-200 text-xs sm:text-sm font-bold text-rose-800';
+        fb.innerHTML = '⚠️ Kanvas masih kosong atau lakaran terlalu sedikit. Sila tulis di atas bayangan huruf panduan dahulu.';
+        return;
+      }
+
+      // Jana kanvas rujukan templat untuk perbandingan piksel
+      const prompt = WRITING_PROMPTS[currentWriteIdx % WRITING_PROMPTS.length];
+      const refCanvas = document.createElement('canvas');
+      refCanvas.width = canvas.width;
+      refCanvas.height = canvas.height;
+      const rCtx = refCanvas.getContext('2d');
+      rCtx.font = `bold ${Math.min(130, canvas.height * 0.45)}px "Noto Naskh Arabic", serif`;
+      rCtx.fillStyle = '#000000';
+      rCtx.textAlign = 'center';
+      rCtx.textBaseline = 'middle';
+      rCtx.fillText(prompt.jawi, canvas.width / 2, canvas.height * 0.52);
+
+      const userData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+      const refData = rCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+      let templatePixels = 0;
+      let matchedPixels = 0;
+      let strayPixels = 0;
+
+      for (let i = 0; i < refData.length; i += 16) {
+        const isTemplate = refData[i + 3] > 50;
+        // Kesan dakwat pengguna (bukan warna putih latar dan bukan bayangan hijau lembut)
+        const r = userData[i], g = userData[i + 1], b = userData[i + 2];
+        const isUserInk = (r < 210 || g < 225 || b < 210) && !(r > 210 && g > 240 && b > 225);
+
+        if (isTemplate) {
+          templatePixels++;
+          if (isUserInk) matchedPixels++;
+        } else if (isUserInk) {
+          strayPixels++;
+        }
+      }
+
+      const coverage = templatePixels > 0 ? (matchedPixels / templatePixels) : 0;
+      const precisionPenalty = templatePixels > 0 ? Math.min(0.35, (strayPixels / (templatePixels * 3.5))) : 0;
+      const accuracyPct = Math.max(15, Math.min(98, Math.round((coverage * 135 - precisionPenalty * 100))));
+
+      fb.classList.remove('hidden');
+      if (accuracyPct >= 65) {
+        playTone('correct');
+        fb.className = 'mt-3 p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-xs sm:text-sm font-bold text-emerald-900';
+        fb.innerHTML = `🌟 Analisis Bentuk Tulisan: <b>${accuracyPct}% Ketepatan Liputan!</b> Bentuk dan kedudukan tulisan anda mengikut garisan panduan dengan baik. Tekan "Simpan Hasil" untuk rekod!`;
+      } else {
+        playTone('click');
+        fb.className = 'mt-3 p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-xs sm:text-sm font-bold text-amber-900';
+        fb.innerHTML = `✏️ Analisis Bentuk Tulisan: <b>${accuracyPct}% Ketepatan Liputan.</b> Cuba pastikan lakaran anda meliputi keseluruhan bentuk huruf dan titik di atas bayangan panduan.`;
+      }
+    }
+
+    function saveWritingWork() {
+      const canvas = document.getElementById('writingCanvas');
+      if (userStrokePoints < 12) {
+        playTone('wrong');
+        showToast('Sila tulis huruf pada kanvas sebelum menyimpan!', 'warn');
+        return;
+      }
+      const prompt = WRITING_PROMPTS[currentWriteIdx % WRITING_PROMPTS.length];
+      const stu = getActiveStudent();
+      stu.writingSaved.unshift({
+        label: prompt.rumi,
+        jawi: prompt.jawi,
+        date: new Date().toLocaleDateString('ms-MY')
+      });
+      if (stu.writingSaved.length > 12) stu.writingSaved.pop();
+
+      playTone('fanfare');
+      launchConfetti();
+      awardProgress({ xp: 25, stars: 1, reason: `Hasil tulisan "${prompt.jawi}" disimpan`, missionType: 'writing' });
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 14. MODUL PERMAINAN JAWI (8 PERMAINAN INTERAKTIF LENGKAP)
+     *************************************************************************/
+    let gameState = {
+      activeGameId: null,
+      score: 0,
+      round: 1,
+      maxRounds: 5,
+      feedback: '',
+      // Khusus Padankan Jawi
+      matchPairs: [],
+      selectedLeft: null,
+      matchedIds: [],
+      // Khusus Susun Huruf
+      scrambleWord: null,
+      scrambleChosen: [],
+      // Khusus Memory
+      memCards: [],
+      memFlipped: [],
+      memMatched: [],
+      // Khusus Cabaran Pantas
+      blitzTime: 45,
+      blitzTimerRef: null
+    };
+
+    function renderGamesHub(selectedGame = null) {
+      if (selectedGame && gameState.activeGameId !== selectedGame) {
+        startMiniGame(selectedGame);
+      }
+
+      if (gameState.activeGameId) {
+        return renderActiveMiniGame();
+      }
+
+      const gamesList = [
+        { id: 1, title: 'Cari Huruf', desc: 'Cari huruf Jawi yang diminta dengan pantas!', icon: '🔎', color: 'from-emerald-400 to-teal-600' },
+        { id: 2, title: 'Padankan Jawi', desc: 'Padankan pasangan Rumi & Jawi yang betul.', icon: '🔗', color: 'from-sky-400 to-blue-600' },
+        { id: 3, title: 'Susun Huruf', desc: 'Susun kepingan huruf menjadi perkataan Jawi.', icon: '🧱', color: 'from-amber-400 to-orange-500' },
+        { id: 4, title: 'Teka Gambar', desc: 'Lihat gambar comel dan pilih ejaan Jawi.', icon: '🖼️', color: 'from-pink-400 to-rose-600' },
+        { id: 5, title: 'Rumi ke Jawi', desc: 'Tukar perkataan Rumi kepada tulisan Jawi.', icon: '🔄', color: 'from-purple-400 to-indigo-600' },
+        { id: 6, title: 'Jawi Memory', desc: 'Buka kad memori & cari pasangan huruf.', icon: '🃏', color: 'from-teal-400 to-emerald-600' },
+        { id: 7, title: 'Lengkapkan Perkataan', desc: 'Isi huruf Jawi yang hilang dalam perkataan.', icon: '🧩', color: 'from-orange-400 to-red-500' },
+        { id: 8, title: 'Cabaran Pantas', desc: 'Jawab seberapa banyak soalan dalam 45 saat!', icon: '⚡', color: 'from-yellow-400 to-amber-600' }
+      ];
+
+      return `
+        <div class="space-y-5 animate-pop">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold text-rose-600">🎮 Zon Permainan Jawi</h1>
+              <p class="text-xs sm:text-sm text-slate-600">Pilih salah satu daripada 8 permainan interaktif untuk menguji kecekapan anda!</p>
+            </div>
+            <button onclick="navigateTo('studentDashboard')" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold">🏠 Dashboard</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            ${gamesList.map(g => `
+              <div class="bg-white rounded-3xl p-5 border-2 border-slate-100 hover:border-emerald-300 shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${g.color} text-white text-3xl flex items-center justify-center shadow">
+                    ${g.icon}
+                  </div>
+                  <span class="inline-block mt-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Permainan ${g.id}</span>
+                  <h3 class="font-display text-xl font-bold text-slate-800">${g.title}</h3>
+                  <p class="text-xs text-slate-500 mt-1">${g.desc}</p>
+                </div>
+                <button onclick="startMiniGame(${g.id}); renderCurrentView()" class="btn-3d btn-green mt-4 w-full py-2.5 rounded-2xl font-bold text-sm">
+                  Main Sekarang ▶
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function exitMiniGame() {
+      if (gameState.blitzTimerRef) clearInterval(gameState.blitzTimerRef);
+      gameState.activeGameId = null;
+      appState.viewParam = null;
+      renderCurrentView();
+    }
+
+    function startMiniGame(id) {
+      if (gameState.blitzTimerRef) clearInterval(gameState.blitzTimerRef);
+      gameState.activeGameId = id;
+      gameState.score = 0;
+      gameState.round = 1;
+      gameState.maxRounds = 5;
+      gameState.feedback = '';
+
+      if (id === 2) setupMatchGame();
+      if (id === 3) setupScrambleRound();
+      if (id === 6) setupMemoryGame();
+      if (id === 8) {
+        gameState.blitzTime = 45;
+        gameState.blitzTimerRef = setInterval(() => {
+          gameState.blitzTime--;
+          const el = document.getElementById('blitzTimerDisplay');
+          if (el) el.textContent = gameState.blitzTime + 's';
+          if (gameState.blitzTime <= 0) {
+            clearInterval(gameState.blitzTimerRef);
+            finishMiniGame('Cabaran Pantas');
+          }
+        }, 1000);
+      }
+    }
+
+    function setupMatchGame() {
+      const sample = [...appState.customWords].sort(() => 0.5 - Math.random()).slice(0, 4);
+      gameState.matchPairs = sample;
+      gameState.selectedLeft = null;
+      gameState.matchedIds = [];
+    }
+
+    function setupScrambleRound() {
+      const poolWords = appState.customWords.filter(w => w.letters.length <= 5);
+      gameState.scrambleWord = poolWords[Math.floor(Math.random() * poolWords.length)];
+      gameState.scrambleChosen = [];
+    }
+
+    function setupMemoryGame() {
+      const chosen = [...JAWI_LETTERS].sort(() => 0.5 - Math.random()).slice(0, 4);
+      const cards = [];
+      chosen.forEach((l, idx) => {
+        cards.push({ uid: `c_${idx}_a`, pairId: idx, label: l.char, isJawi: true });
+        cards.push({ uid: `c_${idx}_b`, pairId: idx, label: l.name, isJawi: false });
+      });
+      gameState.memCards = cards.sort(() => 0.5 - Math.random());
+      gameState.memFlipped = [];
+      gameState.memMatched = [];
+    }
+
+    function finishMiniGame(gameTitle) {
+      if (gameState.blitzTimerRef) clearInterval(gameState.blitzTimerRef);
+      playTone('fanfare');
+      launchConfetti();
+      const earnedStars = gameState.score >= 40 ? 3 : gameState.score >= 20 ? 2 : 1;
+      awardProgress({
+        xp: 35,
+        stars: earnedStars,
+        reason: `Tamat ${gameTitle} (Skor: ${gameState.score})`,
+        missionType: 'game'
+      });
+      gameState.activeGameId = null;
+      renderCurrentView();
+    }
+
+    function renderActiveMiniGame() {
+      const id = gameState.activeGameId;
+      const titles = {
+        1: '🔎 Game 1: Cari Huruf',
+        2: '🔗 Game 2: Padankan Jawi',
+        3: '🧱 Game 3: Susun Huruf',
+        4: '🖼️ Game 4: Teka Gambar',
+        5: '🔄 Game 5: Rumi ke Jawi',
+        6: '🃏 Game 6: Jawi Memory',
+        7: '🧩 Game 7: Lengkapkan Perkataan',
+        8: '⚡ Game 8: Cabaran Pantas'
+      };
+
+      let body = '';
+
+      // GAME 1: CARI HURUF
+      if (id === 1) {
+        const target = JAWI_LETTERS[Math.floor(Math.random() * JAWI_LETTERS.length)];
+        const distractors = JAWI_LETTERS.filter(l => l.char !== target.char).sort(() => 0.5 - Math.random()).slice(0, 5);
+        const options = [target, ...distractors].sort(() => 0.5 - Math.random());
+        body = `
+          <div class="text-center">
+            <p class="text-sm font-bold text-slate-600">Pusingan ${gameState.round}/${gameState.maxRounds} • Klik huruf Jawi bagi:</p>
+            <div class="my-3 inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-amber-100 border-2 border-amber-300">
+              <span class="font-display text-3xl font-bold text-amber-950">${target.name}</span>
+              <button onclick="speakMalay('Cari huruf ${target.name}')" class="p-2 rounded-xl bg-white text-amber-800 text-sm">🔊</button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto mt-4">
+              ${options.map(o => `
+                <button onclick="handleStandardRoundAnswer(${o.char === target.char}, 'Cari Huruf')"
+                  class="btn-3d btn-white py-5 rounded-2xl jawi-text text-5xl font-bold text-emerald-700 hover:bg-emerald-50">
+                  ${o.char}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // GAME 2: PADANKAN JAWI
+      else if (id === 2) {
+        const rightShuffled = [...gameState.matchPairs].sort((a, b) => a.jawi.localeCompare(b.jawi));
+        body = `
+          <div class="text-center">
+            <p class="text-sm font-bold text-slate-600 mb-4">Klik perkataan <b>Rumi</b> di kiri, kemudian klik padanan <b>Jawi</b> di kanan!</p>
+            <div class="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+              <div class="space-y-2.5">
+                ${gameState.matchPairs.map(p => {
+                  const done = gameState.matchedIds.includes(p.id);
+                  const sel = gameState.selectedLeft === p.id;
+                  return `
+                    <button ${done ? 'disabled' : ''} onclick="selectMatchLeft('${p.id}')"
+                      class="w-full py-3.5 px-4 rounded-2xl font-display text-lg font-bold border-2 transition ${done ? 'bg-emerald-100 border-emerald-300 text-emerald-700 opacity-60' : sel ? 'bg-amber-300 border-amber-500 text-amber-950 scale-105' : 'bg-white border-slate-200 hover:border-sky-400'}">
+                      ${p.icon} ${p.rumi}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+              <div class="space-y-2.5">
+                ${rightShuffled.map(p => {
+                  const done = gameState.matchedIds.includes(p.id);
+                  return `
+                    <button ${done ? 'disabled' : ''} onclick="selectMatchRight('${p.id}')"
+                      class="w-full py-3 px-4 rounded-2xl jawi-text text-3xl font-bold border-2 transition ${done ? 'bg-emerald-100 border-emerald-300 text-emerald-700 opacity-60' : 'bg-sky-50 border-sky-200 hover:border-emerald-400 text-slate-800'}">
+                      ${p.jawi}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // GAME 3: SUSUN HURUF
+      else if (id === 3) {
+        const w = gameState.scrambleWord;
+        const shuffled = [...w.letters].sort((a, b) => b.localeCompare(a));
+        body = `
+          <div class="text-center">
+            <p class="text-sm font-bold text-slate-600">Pusingan ${gameState.round}/${gameState.maxRounds} • Susun huruf dari <b>kanan ke kiri</b>!</p>
+            <div class="text-5xl mt-2">${w.icon}</div>
+            <h3 class="font-display text-2xl font-bold text-emerald-700 mt-1">${w.rumi}</h3>
+
+            <div dir="rtl" class="mt-4 min-h-[68px] max-w-md mx-auto p-3 rounded-2xl bg-emerald-50 border-2 border-dashed border-emerald-400 flex items-center justify-center gap-2">
+              ${gameState.scrambleChosen.map(c => `<span class="jawi-text text-3xl font-bold px-3.5 py-1.5 bg-white rounded-xl border border-emerald-300">${c}</span>`).join('')}
+            </div>
+
+            <div dir="rtl" class="mt-4 flex justify-center gap-2.5 flex-wrap">
+              ${shuffled.map(c => `
+                <button onclick="gameState.scrambleChosen.push('${c}'); playTone('click'); renderCurrentView()"
+                  class="btn-3d btn-white jawi-text text-3xl font-bold w-14 h-14 rounded-2xl">
+                  ${c}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="mt-5 flex justify-center gap-3">
+              <button onclick="gameState.scrambleChosen=[]; renderCurrentView()" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs font-bold">Reset</button>
+              <button onclick="checkScrambleGame()" class="btn-3d btn-green px-6 py-2.5 rounded-xl text-sm font-bold">Semak Ejaan ✅</button>
+            </div>
+          </div>
+        `;
+      }
+
+      // GAME 4: TEKA GAMBAR & GAME 5: RUMI KE JAWI
+      else if (id === 4 || id === 5) {
+        const target = appState.customWords[Math.floor(Math.random() * appState.customWords.length)];
+        const others = appState.customWords.filter(w => w.id !== target.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+        const choices = [target, ...others].sort(() => 0.5 - Math.random());
+
+        body = `
+          <div class="text-center">
+            <p class="text-sm font-bold text-slate-600">Pusingan ${gameState.round}/${gameState.maxRounds}</p>
+            ${id === 4
+              ? `<div class="text-7xl my-3">${target.icon}</div><h3 class="font-display text-xl font-bold text-slate-700">Pilih perkataan Jawi bagi gambar di atas:</h3>`
+              : `<div class="my-4 inline-block px-7 py-3 rounded-2xl bg-purple-100 border-2 border-purple-300 font-display text-3xl font-bold text-purple-900">${target.rumi}</div><h3 class="font-display text-lg font-bold text-slate-700">Pilih ejaan Jawi yang tepat:</h3>`
+            }
+            <div class="grid grid-cols-2 gap-3 max-w-md mx-auto mt-4">
+              ${choices.map(c => `
+                <button onclick="handleStandardRoundAnswer(${c.id === target.id}, '${id === 4 ? 'Teka Gambar' : 'Rumi ke Jawi'}')"
+                  class="btn-3d btn-white py-4 rounded-2xl jawi-text text-3xl font-bold text-emerald-800 hover:bg-emerald-50">
+                  ${c.jawi}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // GAME 6: JAWI MEMORY
+      else if (id === 6) {
+        body = `
+          <div class="text-center">
+            <p class="text-sm font-bold text-slate-600 mb-4">Klik dua kad untuk mencari pasangan <b>Huruf Jawi</b> dan <b>Namanya</b>!</p>
+            <div class="grid grid-cols-4 gap-3 max-w-md mx-auto">
+              ${gameState.memCards.map((card, idx) => {
+                const isFlipped = gameState.memFlipped.includes(idx) || gameState.memMatched.includes(card.pairId);
+                return `
+                  <button onclick="flipMemoryCard(${idx})"
+                    class="h-24 rounded-2xl border-2 font-bold transition flex items-center justify-center shadow-sm ${isFlipped ? 'bg-white border-emerald-400 text-emerald-800' : 'bg-gradient-to-br from-emerald-400 to-teal-600 border-emerald-600 text-white text-2xl'}">
+                    ${isFlipped ? `<span class="${card.isJawi ? 'jawi-text text-4xl' : 'font-display text-base'}">${card.label}</span>` : '❓'}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // GAME 7: LENGKAPKAN PERKATAAN
+      else if (id === 7) {
+        const w = appState.customWords[Math.floor(Math.random() * appState.customWords.length)];
+        const missingIdx = Math.floor(Math.random() * w.letters.length);
+        const missingChar = w.letters[missingIdx];
+        const masked = w.letters.map((ch, idx) => idx === missingIdx ? '⬜' : ch).join(' ');
+        const distractors = JAWI_LETTERS.filter(l => l.char !== missingChar).sort(() => 0.5 - Math.random()).slice(0, 3).map(l => l.char);
+        const choices = [missingChar, ...distractors].sort(() => 0.5 - Math.random());
+
+        body = `
+          <div class="text-center">
+            <p class="text-sm font-bold text-slate-600">Pusingan ${gameState.round}/${gameState.maxRounds} • Lengkapkan huruf tertinggal bagi <b>${w.rumi}</b> ${w.icon}</p>
+            <div dir="rtl" class="my-4 py-4 px-6 inline-block rounded-2xl bg-amber-50 border-2 border-amber-300 jawi-text text-4xl font-bold text-slate-800 tracking-widest">
+              ${masked}
+            </div>
+            <div class="grid grid-cols-4 gap-3 max-w-md mx-auto mt-3">
+              ${choices.map(ch => `
+                <button onclick="handleStandardRoundAnswer(${ch === missingChar}, 'Lengkapkan Perkataan')"
+                  class="btn-3d btn-white py-4 rounded-2xl jawi-text text-3xl font-bold text-emerald-800">
+                  ${ch}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // GAME 8: CABARAN PANTAS
+      else if (id === 8) {
+        const w = appState.customWords[Math.floor(Math.random() * appState.customWords.length)];
+        const others = appState.customWords.filter(x => x.id !== w.id).sort(() => 0.5 - Math.random()).slice(0, 2);
+        const choices = [w, ...others].sort(() => 0.5 - Math.random());
+        body = `
+          <div class="text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-100 text-rose-700 font-extrabold text-sm">
+              ⏱️ Masa Berbaki: <span id="blitzTimerDisplay">${gameState.blitzTime}s</span>
+            </div>
+            <h3 class="font-display text-2xl font-bold text-slate-800 mt-3">Apakah ejaan Jawi bagi "${w.rumi}" ${w.icon}?</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto mt-4">
+              ${choices.map(c => `
+                <button onclick="handleBlitzAnswer(${c.id === w.id})"
+                  class="btn-3d btn-white py-4 rounded-2xl jawi-text text-3xl font-bold text-emerald-800 hover:bg-amber-50">
+                  ${c.jawi}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="max-w-3xl mx-auto animate-pop">
+          <div class="bg-white rounded-3xl p-5 sm:p-7 border-4 border-emerald-200 shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div>
+                <h2 class="font-display text-xl sm:text-2xl font-bold text-slate-800">${titles[id]}</h2>
+                <span class="text-xs font-extrabold text-emerald-600">Markah Semasa: ${gameState.score}</span>
+              </div>
+              <button onclick="exitMiniGame()" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs font-bold">✕ Keluar</button>
+            </div>
+            ${body}
+          </div>
+        </div>
+      `;
+    }
+
+    function handleStandardRoundAnswer(isCorrect, gameTitle) {
+      if (isCorrect) {
+        playTone('correct');
+        gameState.score += 10;
+        showToast('Betul! +10 Markah 🌟', 'success');
+      } else {
+        playTone('wrong');
+        showToast('Kurang tepat, cuba soalan seterusnya!', 'warn');
+      }
+
+      if (gameState.round >= gameState.maxRounds) {
+        finishMiniGame(gameTitle);
+      } else {
+        gameState.round++;
+        renderCurrentView();
+      }
+    }
+
+    function selectMatchLeft(id) {
+      playTone('click');
+      gameState.selectedLeft = id;
+      renderCurrentView();
+    }
+
+    function selectMatchRight(id) {
+      if (!gameState.selectedLeft) {
+        showToast('Pilih perkataan Rumi di sebelah kiri dahulu!', 'info');
+        return;
+      }
+      if (gameState.selectedLeft === id) {
+        playTone('correct');
+        gameState.matchedIds.push(id);
+        gameState.selectedLeft = null;
+        gameState.score += 10;
+        if (gameState.matchedIds.length === gameState.matchPairs.length) {
+          finishMiniGame('Padankan Jawi');
+          return;
+        }
+      } else {
+        playTone('wrong');
+        gameState.selectedLeft = null;
+        showToast('Pasangan tidak sepadan, cuba lagi!', 'warn');
+      }
+      renderCurrentView();
+    }
+
+    function checkScrambleGame() {
+      const w = gameState.scrambleWord;
+      if (gameState.scrambleChosen.join('') === w.letters.join('')) {
+        handleStandardRoundAnswer(true, 'Susun Huruf');
+        if (gameState.activeGameId === 3) setupScrambleRound();
+        renderCurrentView();
+      } else {
+        playTone('wrong');
+        gameState.scrambleChosen = [];
+        showToast('Susunan huruf belum tepat, cuba lagi!', 'warn');
+        renderCurrentView();
+      }
+    }
+
+    function flipMemoryCard(idx) {
+      if (gameState.memFlipped.length >= 2 || gameState.memFlipped.includes(idx)) return;
+      const card = gameState.memCards[idx];
+      if (gameState.memMatched.includes(card.pairId)) return;
+
+      playTone('click');
+      gameState.memFlipped.push(idx);
+      renderCurrentView();
+
+      if (gameState.memFlipped.length === 2) {
+        const [i1, i2] = gameState.memFlipped;
+        const c1 = gameState.memCards[i1];
+        const c2 = gameState.memCards[i2];
+        setTimeout(() => {
+          if (c1.pairId === c2.pairId) {
+            playTone('correct');
+            gameState.memMatched.push(c1.pairId);
+            gameState.score += 15;
+            if (gameState.memMatched.length === 4) {
+              finishMiniGame('Jawi Memory');
+              return;
+            }
+          } else {
+            playTone('wrong');
+          }
+          gameState.memFlipped = [];
+          renderCurrentView();
+        }, 650);
+      }
+    }
+
+    function handleBlitzAnswer(isCorrect) {
+      if (isCorrect) {
+        playTone('correct');
+        gameState.score += 10;
+      } else {
+        playTone('wrong');
+      }
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 15. MODUL KUIZ PINTAR
+     *************************************************************************/
+    let quizSession = {
+      active: false,
+      category: 'Semua',
+      difficulty: 'Semua',
+      questions: [],
+      currentIdx: 0,
+      score: 0,
+      answered: false,
+      chosenIdx: null,
+      finished: false
+    };
+
+    function renderQuizModule() {
+      if (!quizSession.active && !quizSession.finished) {
+        const cats = ['Semua', 'Mengenal Huruf', 'Bentuk Huruf', 'Suku Kata', 'Perkataan', 'Membaca Ayat', 'Ejaan Jawi'];
+        const diffs = ['Semua', 'Mudah', 'Sederhana', 'Sukar'];
+
+        return `
+          <div class="max-w-2xl mx-auto animate-pop">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-sky-200 shadow-xl">
+              <div class="flex items-center justify-between mb-4">
+                <h1 class="font-display text-2xl sm:text-3xl font-bold text-sky-800">🧠 Kuiz Pintar Jawi</h1>
+                <button onclick="navigateTo('studentDashboard')" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs font-bold">🏠 Dashboard</button>
+              </div>
+              <p class="text-sm text-slate-600 mb-6">Pilih kategori dan tahap kesukaran untuk menguji penguasaan Jawi anda!</p>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-extrabold uppercase text-slate-500 mb-2">Kategori Kuiz</label>
+                  <div class="flex flex-wrap gap-2">
+                    ${cats.map(c => `
+                      <button onclick="quizSession.category='${c}'; renderCurrentView()"
+                        class="px-3.5 py-2 rounded-xl text-xs font-bold border-2 transition ${quizSession.category === c ? 'bg-sky-500 text-white border-sky-600' : 'bg-slate-50 border-slate-200 text-slate-700'}">
+                        ${c}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-extrabold uppercase text-slate-500 mb-2">Tahap Kesukaran</label>
+                  <div class="grid grid-cols-4 gap-2">
+                    ${diffs.map(d => `
+                      <button onclick="quizSession.difficulty='${d}'; renderCurrentView()"
+                        class="py-2.5 rounded-xl text-xs font-bold border-2 transition ${quizSession.difficulty === d ? 'bg-amber-400 text-amber-950 border-amber-500' : 'bg-slate-50 border-slate-200 text-slate-700'}">
+                        ${d}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="startQuizSession()" class="btn-3d btn-green w-full mt-7 py-4 rounded-2xl font-display text-xl font-bold">
+                Mula Kuiz Sekarang 🚀
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (quizSession.finished) {
+        const total = quizSession.questions.length;
+        const pct = Math.round((quizSession.score / total) * 100);
+        const stars = pct >= 85 ? 3 : pct >= 55 ? 2 : 1;
+
+        return `
+          <div class="max-w-xl mx-auto animate-pop text-center">
+            <div class="bg-white rounded-3xl p-8 border-4 border-amber-300 shadow-2xl">
+              <div class="text-5xl mb-2">${'⭐'.repeat(stars)}</div>
+              <h2 class="font-display text-3xl font-bold text-slate-800">Keputusan Kuiz Pintar!</h2>
+              <p class="text-sm text-slate-500 mt-1">Tahniah kerana berjaya menjawab semua soalan!</p>
+
+              <div class="my-6 p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-200">
+                <div class="font-display text-5xl font-bold text-emerald-600">${pct}%</div>
+                <div class="text-sm font-extrabold text-slate-700 mt-1">Betul: ${quizSession.score} daripada ${total} soalan</div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="quizSession.finished=false; renderCurrentView()" class="btn-3d btn-yellow py-3 rounded-2xl font-bold text-sm">🔄 Ulang Kuiz</button>
+                <button onclick="quizSession.finished=false; navigateTo('studentDashboard')" class="btn-3d btn-green py-3 rounded-2xl font-bold text-sm">🏠 Dashboard</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const q = quizSession.questions[quizSession.currentIdx];
+      return `
+        <div class="max-w-2xl mx-auto animate-pop">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-emerald-200 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">
+                Soalan ${quizSession.currentIdx + 1} / ${quizSession.questions.length}
+              </span>
+              <span class="text-xs font-bold text-slate-500">${q.cat} • ${q.diff}</span>
+            </div>
+
+            <h3 class="font-display text-xl sm:text-2xl font-bold text-slate-800">${q.q}</h3>
+
+            ${q.jawiPrompt ? `
+              <div class="my-4 py-4 px-6 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
+                <span class="jawi-text text-4xl sm:text-5xl font-bold text-emerald-800">${q.jawiPrompt}</span>
+              </div>
+            ` : '<div class="my-4"></div>'}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${q.options.map((opt, idx) => {
+                let btnStyle = 'bg-slate-50 border-slate-200 hover:border-sky-400 text-slate-800';
+                if (quizSession.answered) {
+                  if (idx === q.answer) btnStyle = 'bg-emerald-500 border-emerald-700 text-white';
+                  else if (idx === quizSession.chosenIdx) btnStyle = 'bg-rose-500 border-rose-700 text-white';
+                }
+                return `
+                  <button ${quizSession.answered ? 'disabled' : ''} onclick="submitQuizAnswer(${idx})"
+                    class="p-4 rounded-2xl border-2 font-bold text-lg transition ${btnStyle}">
+                    <span class="jawi-text text-2xl">${opt}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            ${quizSession.answered ? `
+              <div class="mt-5 p-4 rounded-2xl bg-sky-50 border-2 border-sky-200 text-xs sm:text-sm text-sky-900">
+                <b>💡 Penerangan:</b> ${q.exp}
+              </div>
+              <button onclick="nextQuizQuestion()" class="btn-3d btn-green w-full mt-4 py-3.5 rounded-2xl font-bold text-base">
+                ${quizSession.currentIdx + 1 >= quizSession.questions.length ? 'Lihat Keputusan 🏆' : 'Soalan Seterusnya →'}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function startQuizSession() {
+      let pool = appState.customQuizzes.filter(q =>
+        (quizSession.category === 'Semua' || q.cat === quizSession.category) &&
+        (quizSession.difficulty === 'Semua' || q.diff === quizSession.difficulty)
+      );
+      if (pool.length < 5) pool = [...appState.customQuizzes];
+      quizSession.questions = pool.sort(() => 0.5 - Math.random()).slice(0, 6);
+      quizSession.currentIdx = 0;
+      quizSession.score = 0;
+      quizSession.answered = false;
+      quizSession.chosenIdx = null;
+      quizSession.active = true;
+      quizSession.finished = false;
+      renderCurrentView();
+    }
+
+    function submitQuizAnswer(idx) {
+      const q = quizSession.questions[quizSession.currentIdx];
+      quizSession.answered = true;
+      quizSession.chosenIdx = idx;
+      const stu = getActiveStudent();
+      stu.dailyMissions.quizCount += 1;
+
+      if (idx === q.answer) {
+        playTone('correct');
+        quizSession.score++;
+      } else {
+        playTone('wrong');
+      }
+      saveAppState();
+      renderCurrentView();
+    }
+
+    function nextQuizQuestion() {
+      if (quizSession.currentIdx + 1 >= quizSession.questions.length) {
+        quizSession.active = false;
+        quizSession.finished = true;
+        const pct = Math.round((quizSession.score / quizSession.questions.length) * 100);
+        const stars = pct >= 85 ? 3 : pct >= 55 ? 2 : 1;
+
+        const stu = getActiveStudent();
+        stu.quizzesTaken += 1;
+        if (pct >= 80) stu.quizHighScores += 1;
+        stu.quizHistory.unshift({
+          date: new Date().toLocaleDateString('ms-MY'),
+          cat: quizSession.category,
+          score: pct,
+          stars
+        });
+
+        playTone('fanfare');
+        launchConfetti();
+        awardProgress({ xp: quizSession.score * 10 + 15, stars, reason: `Kuiz Pintar (${pct}%)` });
+      } else {
+        quizSession.currentIdx++;
+        quizSession.answered = false;
+        quizSession.chosenIdx = null;
+      }
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 16. KOLEKSI GANJARAN & PENCAPAIAN SAYA
+     *************************************************************************/
+    function renderRewardsAndAchievements() {
+      const stu = getActiveStudent();
+      return `
+        <div class="space-y-6 animate-pop">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold text-amber-700">🏆 Koleksi Ganjaran & Pencapaian</h1>
+              <p class="text-xs sm:text-sm text-slate-600">Kumpul semua 6 lencana rasmi JawiPro!</p>
+            </div>
+            <button onclick="navigateTo('studentDashboard')" class="btn-3d btn-white px-4 py-2 rounded-xl text-xs font-bold">🏠 Dashboard</button>
+          </div>
+
+          <!-- Grid 6 Lencana -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${BADGES_META.map(b => {
+              const unlocked = stu.badges.includes(b.id);
+              return `
+                <div class="rounded-3xl p-5 border-2 transition ${unlocked ? 'bg-gradient-to-br from-amber-50 to-yellow-100 border-amber-400 shadow-md' : 'bg-white/70 border-slate-200 opacity-75'}">
+                  <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-2xl ${unlocked ? 'bg-amber-400 text-4xl shadow' : 'bg-slate-200 text-3xl grayscale'} flex items-center justify-center shrink-0">
+                      ${b.icon}
+                    </div>
+                    <div>
+                      <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${unlocked ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}">
+                        ${unlocked ? '✅ Dibuka' : '🔒 Terkunci'}
+                      </span>
+                      <h3 class="font-display text-lg font-bold text-slate-800 mt-1">${b.title}</h3>
+                      <p class="text-xs text-slate-600 mt-0.5">${b.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Rekod Kuiz & Hasil Tulisan -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-white rounded-3xl p-5 border-2 border-slate-100 shadow-md">
+              <h3 class="font-display text-lg font-bold text-slate-800 mb-3">📊 Rekod Keputusan Kuiz</h3>
+              ${stu.quizHistory.length === 0
+                ? '<p class="text-xs text-slate-400">Belum ada rekod kuiz. Cuba Kuiz Pintar sekarang!</p>'
+                : `<div class="space-y-2">
+                    ${stu.quizHistory.slice(0, 5).map(h => `
+                      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold">
+                        <span>${h.cat} (${h.date})</span>
+                        <span class="text-emerald-700">${h.score}% • ${'⭐'.repeat(h.stars)}</span>
+                      </div>
+                    `).join('')}
+                  </div>`
+              }
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 border-2 border-slate-100 shadow-md">
+              <h3 class="font-display text-lg font-bold text-slate-800 mb-3">✍️ Galeri Hasil Menulis Jawi</h3>
+              ${stu.writingSaved.length === 0
+                ? '<p class="text-xs text-slate-400">Belum ada tulisan disimpan. Pergi ke modul Belajar Menulis!</p>'
+                : `<div class="grid grid-cols-2 gap-2">
+                    ${stu.writingSaved.slice(0, 6).map(w => `
+                      <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                        <div class="jawi-text text-2xl font-bold text-emerald-800">${w.jawi}</div>
+                        <div class="text-[11px] font-bold text-slate-700">${w.label}</div>
+                        <div class="text-[10px] text-slate-400">${w.date}</div>
+                      </div>
+                    `).join('')}
+                  </div>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /*************************************************************************
+     * 17. DASHBOARD IBU BAPA (KAWALAN PENJAGA & KESELAMATAN)
+     *************************************************************************/
+    function renderParentDashboard() {
+      const stu = getActiveStudent();
+      const minsUsed = Math.max(1, Math.round(appState.sessionSecondsToday / 60));
+
+      return `
+        <div class="space-y-6 animate-pop">
+          <div class="bg-white rounded-3xl p-6 border-4 border-amber-200 shadow-lg flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">👨‍👩‍👧‍👦 Ruangan Ibu Bapa & Penjaga</span>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-800 mt-1">Pemantauan Kemajuan Anak</h1>
+              <p class="text-xs text-slate-500">Pantau aktiviti pembelajaran, masa skrin dan keselamatan anak anda.</p>
+            </div>
+            <button onclick="navigateTo('roleSelect')" class="btn-3d btn-white px-4 py-2.5 rounded-xl text-xs font-bold">← Keluar Penjaga</button>
+          </div>
+
+          <!-- Ringkasan Laporan Anak -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-3xl p-5 border-2 border-emerald-100 shadow-sm">
+              <div class="text-xs font-bold text-slate-400">PROFIL AKTIF</div>
+              <div class="flex items-center gap-3 mt-2">
+                <span class="text-4xl">${stu.avatar}</span>
+                <div>
+                  <div class="font-display text-xl font-bold text-slate-800">${stu.name}</div>
+                  <div class="text-xs text-emerald-700 font-bold">${stu.stage}</div>
+                </div>
+              </div>
+              <div class="mt-3 text-xs text-slate-600">
+                Huruf Dikuasai: <b>${stu.exploredLetters.length}/37</b> • Bintang: <b>⭐ ${stu.stars}</b>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 border-2 border-sky-100 shadow-sm">
+              <div class="text-xs font-bold text-slate-400">MASA PENGGUNAAN HARI INI</div>
+              <div class="font-display text-3xl font-bold text-sky-700 mt-2">${minsUsed} / ${appState.timeLimitMinutes} Minit</div>
+              <p class="text-xs text-slate-500 mt-1">Had masa skrin sihat untuk kanak-kanak.</p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 border-2 border-amber-100 shadow-sm">
+              <div class="text-xs font-bold text-slate-400">ANALISIS PEMBELAJARAN</div>
+              <div class="text-xs font-bold text-emerald-700 mt-2">✅ Kekuatan: Pengecaman Huruf & Visual</div>
+              <div class="text-xs font-bold text-amber-700 mt-1">💡 Perlu Latihan: Huruf Bersambung & Ejaan</div>
+            </div>
+          </div>
+
+          <!-- Kawalan Tetapan Ibu Bapa -->
+          <div class="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-md grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-display text-lg font-bold text-slate-800 mb-3">⏰ Kawalan Had Masa & PIN</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 mb-1">Had Masa Penggunaan Harian (Minit)</label>
+                  <input id="parentTimeLimitInput" type="number" min="10" max="180" value="${appState.timeLimitMinutes}"
+                    class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 font-bold text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 mb-1">Tukar PIN Penjaga (4 Digit)</label>
+                  <input id="parentNewPinInput" type="text" maxlength="4" value="${appState.parentPin}"
+                    class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 font-bold text-sm" />
+                </div>
+                <button onclick="saveParentSettings()" class="btn-3d btn-green px-5 py-2.5 rounded-xl text-xs font-bold">
+                  Simpan Tetapan Penjaga
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-display text-lg font-bold text-slate-800 mb-3">🛡️ Kawalan Privasi & Notifikasi</h3>
+              <div class="space-y-3 text-xs text-slate-600">
+                <label class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 font-bold">
+                  <span>Notifikasi Motivasi Kanak-Kanak</span>
+                  <input type="checkbox" ${appState.notificationsEnabled ? 'checked' : ''} onchange="appState.notificationsEnabled=this.checked; saveAppState()" class="w-5 h-5 accent-emerald-600" />
+                </label>
+                <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 leading-relaxed">
+                  <b>Perlindungan Kanak-Kanak Aktif:</b> JawiPro tidak mengandungi ruang sembang awam, perkongsian lokasi, mesej peribadi atau iklan pihak ketiga.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveParentSettings() {
+      const mins = parseInt(document.getElementById('parentTimeLimitInput').value, 10);
+      const pin = document.getElementById('parentNewPinInput').value.trim();
+      if (mins >= 5) appState.timeLimitMinutes = mins;
+      if (/^\d{4}$/.test(pin)) appState.parentPin = pin;
+      saveAppState();
+      playTone('correct');
+      showToast('Tetapan penjaga berjaya dikemas kini!', 'success');
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 18. DASHBOARD GURU
+     *************************************************************************/
+    function renderTeacherDashboard() {
+      return `
+        <div class="space-y-6 animate-pop">
+          <div class="bg-white rounded-3xl p-6 border-4 border-sky-200 shadow-lg flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span class="px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-extrabold">👩‍🏫 Portal Guru Sekolah Rendah</span>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-800 mt-1">Pengurusan Kelas & Tugasan Jawi</h1>
+              <p class="text-xs text-slate-500">Pantau prestasi murid, hantar tugasan dan cipta soalan kuiz tambahan.</p>
+            </div>
+            <button onclick="navigateTo('roleSelect')" class="btn-3d btn-white px-4 py-2.5 rounded-xl text-xs font-bold">← Kembali</button>
+          </div>
+
+          <!-- Jadual Prestasi Murid -->
+          <div class="bg-white rounded-3xl p-5 border-2 border-slate-100 shadow-md overflow-x-auto">
+            <h3 class="font-display text-lg font-bold text-slate-800 mb-3">📋 Senarai Kemajuan Murid</h3>
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-sky-600 text-white">
+                  <th class="p-3 rounded-tl-xl">Murid</th>
+                  <th class="p-3">Tahap</th>
+                  <th class="p-3">Huruf Dikuasai</th>
+                  <th class="p-3">Jumlah XP & Bintang</th>
+                  <th class="p-3 rounded-tr-xl">Tugasan Semasa</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${appState.students.map(s => `
+                  <tr>
+                    <td class="p-3 font-bold">${s.avatar} ${s.name}</td>
+                    <td class="p-3">${s.stage}</td>
+                    <td class="p-3 font-bold text-emerald-700">${s.exploredLetters.length} / 37</td>
+                    <td class="p-3 font-bold">⚡ ${s.xp} XP • ⭐ ${s.stars}</td>
+                    <td class="p-3 text-xs text-sky-800 font-bold">${s.assignedTasks.join(', ')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Beri Tugasan & Cipta Soalan Kuiz -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-white rounded-3xl p-5 border-2 border-emerald-100 shadow-md">
+              <h3 class="font-display text-lg font-bold text-slate-800 mb-3">📌 Beri Tugasan Kepada Murid</h3>
+              <select id="teacherTaskSelect" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold mb-3">
+                <option value="Modul 1: Kenali Huruf Jawi">Modul 1: Kenali Huruf Jawi</option>
+                <option value="Modul 2: Bentuk & Kedudukan Huruf">Modul 2: Bentuk & Kedudukan Huruf</option>
+                <option value="Modul 3: Suku Kata Jawi">Modul 3: Suku Kata Jawi</option>
+                <option value="Latihan Menulis: Perkataan Mudah">Latihan Menulis: Perkataan Mudah</option>
+                <option value="Kuiz Pintar: Ejaan Jawi">Kuiz Pintar: Ejaan Jawi</option>
+              </select>
+              <button onclick="assignTeacherTask()" class="btn-3d btn-green w-full py-2.5 rounded-xl text-xs font-bold">
+                Hantar Tugasan ke Dashboard Murid
+              </button>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 border-2 border-amber-100 shadow-md">
+              <h3 class="font-display text-lg font-bold text-slate-800 mb-3">➕ Cipta Soalan Kuiz Baharu</h3>
+              <div class="space-y-2.5">
+                <input id="tqQuestion" type="text" placeholder="Soalan (Cth: Apakah ejaan Jawi bagi Buku?)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="tqOpt1" type="text" placeholder="Pilihan A (Jawapan Betul)" class="px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50/40 text-xs font-bold" />
+                  <input id="tqOpt2" type="text" placeholder="Pilihan B" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                </div>
+                <button onclick="addTeacherQuiz()" class="btn-3d btn-yellow w-full py-2.5 rounded-xl text-xs font-bold">
+                  Tambah ke Bank Soalan Kuiz
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function assignTeacherTask() {
+      const task = document.getElementById('teacherTaskSelect').value;
+      appState.students.forEach(s => {
+        if (!s.assignedTasks.includes(task)) s.assignedTasks.push(task);
+      });
+      saveAppState();
+      playTone('correct');
+      showToast(`Tugasan "${task}" dihantar kepada semua murid!`, 'success');
+      renderCurrentView();
+    }
+
+    function addTeacherQuiz() {
+      const q = document.getElementById('tqQuestion').value.trim();
+      const o1 = document.getElementById('tqOpt1').value.trim();
+      const o2 = document.getElementById('tqOpt2').value.trim();
+      if (!q || !o1 || !o2) {
+        showToast('Sila lengkapkan soalan dan pilihan jawapan!', 'warn');
+        return;
+      }
+      appState.customQuizzes.push({
+        id: 'tq_' + Date.now(),
+        cat: 'Ejaan Jawi',
+        diff: 'Mudah',
+        q,
+        jawiPrompt: '',
+        options: [o1, o2, '—', '—'],
+        answer: 0,
+        exp: `Jawapan tepat ialah ${o1}.`
+      });
+      saveAppState();
+      playTone('correct');
+      showToast('Soalan kuiz guru berjaya ditambah!', 'success');
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 19. PANEL ADMIN (PENGURUSAN KANDUNGAN & EJAAN RASMI)
+     *************************************************************************/
+    function renderAdminDashboard() {
+      return `
+        <div class="space-y-6 animate-pop">
+          <div class="bg-slate-900 text-white rounded-3xl p-6 shadow-xl flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold">⚙️ Panel Pentadbir Sistem JawiPro</span>
+              <h1 class="font-display text-2xl sm:text-3xl font-bold mt-1">Pengurusan Kandungan & Semakan Ejaan Jawi</h1>
+              <p class="text-xs text-slate-300">Kemas kini perkataan Jawi rasmi, bank soalan dan tetapan ganjaran sistem.</p>
+            </div>
+            <button onclick="navigateTo('roleSelect')" class="btn-3d btn-white px-4 py-2.5 rounded-xl text-xs font-bold">← Keluar Admin</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-slate-200">
+              <div class="text-xs font-bold text-slate-400">JUMLAH PERKATAAN JAWI</div>
+              <div class="font-display text-3xl font-bold text-emerald-600 mt-1">${appState.customWords.length}</div>
+            </div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200">
+              <div class="text-xs font-bold text-slate-400">BANK SOALAN KUIZ</div>
+              <div class="font-display text-3xl font-bold text-sky-600 mt-1">${appState.customQuizzes.length}</div>
+            </div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200">
+              <div class="text-xs font-bold text-slate-400">STATUS PANGKALAN DATA</div>
+              <div class="font-display text-xl font-bold text-amber-600 mt-2">${fbConnected ? 'Firebase RTDB Disambung' : 'Mod Simpanan Peranti'}</div>
+            </div>
+          </div>
+
+          <!-- Tambah / Semak Perkataan Jawi Rasmi -->
+          <div class="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-md">
+            <h3 class="font-display text-lg font-bold text-slate-800 mb-3">➕ Tambah Perkataan Jawi Baharu (Semakan Ejaan DBP)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <input id="admRumi" type="text" placeholder="Rumi (Cth: Bola)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold" />
+              <input id="admJawi" type="text" dir="rtl" placeholder="جاوي (Cth: بولا)" class="px-3 py-2.5 rounded-xl border border-slate-200 jawi-text text-lg font-bold" />
+              <input id="admLetters" type="text" placeholder="Huruf dipisah koma (ب,و,ل,ا)" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold" />
+              <button onclick="adminAddWord()" class="btn-3d btn-green py-2.5 rounded-xl text-xs font-bold">Simpan Perkataan</button>
+            </div>
+
+            <div class="mt-5 max-h-64 overflow-y-auto border border-slate-100 rounded-2xl">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-700">
+                  <tr>
+                    <th class="p-2.5">Kategori</th>
+                    <th class="p-2.5">Rumi</th>
+                    <th class="p-2.5">Ejaan Jawi</th>
+                    <th class="p-2.5">Cerakinan Huruf</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${appState.customWords.map(w => `
+                    <tr>
+                      <td class="p-2.5">${w.cat}</td>
+                      <td class="p-2.5 font-bold">${w.rumi}</td>
+                      <td class="p-2.5 jawi-text text-xl font-bold text-emerald-800">${w.jawi}</td>
+                      <td class="p-2.5 jawi-text text-base text-slate-600">${w.letters.join(' - ')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function adminAddWord() {
+      const rumi = document.getElementById('admRumi').value.trim();
+      const jawi = document.getElementById('admJawi').value.trim();
+      const lettersRaw = document.getElementById('admLetters').value.trim();
+      if (!rumi || !jawi || !lettersRaw) {
+        showToast('Sila isi Rumi, Jawi dan cerakinan huruf!', 'warn');
+        return;
+      }
+      const letters = lettersRaw.split(',').map(s => s.trim()).filter(Boolean);
+      appState.customWords.unshift({
+        id: 'w_' + Date.now(),
+        cat: 'Benda di Sekolah',
+        rumi,
+        jawi,
+        letters,
+        icon: '📝'
+      });
+      saveAppState();
+      playTone('correct');
+      showToast(`Perkataan "${rumi}" (${jawi}) ditambah ke sistem!`, 'success');
+      renderCurrentView();
+    }
+
+    /*************************************************************************
+     * 20. PERMULAAN APLIKASI
+     *************************************************************************/
+    window.addEventListener('DOMContentLoaded', () => {
+      initFirebase();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+      }
+      navigateTo('splash');
+    });
+  </script>
+</body>
+</html>
